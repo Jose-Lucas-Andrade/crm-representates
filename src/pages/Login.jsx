@@ -28,7 +28,7 @@ export default function Login() {
     } else {
       setMensagem("Login realizado com sucesso!");
       // Redirecionamento simples
-      window.location.href = "/dashboard";
+      window.location.href = "/";
     }
 
     setLoading(false);

@@ -17,7 +17,7 @@ import EditarCliente from "./pages/EditarCliente";
 import NovoCliente from "./pages/NovoCliente";
 import NovoContato from "./pages/NovoContato";
 import Opportunities from "./pages/Opportunities";
-import DiasSemContato from "./pages/DiasSemContato";
+import DiasSemContato from "./pages/Diassemcontato";
 import Tarefas from "./pages/Tarefas";
 
 export default function App() {
