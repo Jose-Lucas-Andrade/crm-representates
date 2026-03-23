@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { listarTarefasDoDia, concluirTarefa } from "../services/tarefas";
+
+import {
+  listarTarefasDoDia,
+  concluirTarefa,
+} from "../services/tarefas";
+
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
 
 export default function Tarefas() {
   const [tarefas, setTarefas] = useState([]);
@@ -19,33 +26,30 @@ export default function Tarefas() {
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>📅 Tarefas de Hoje</h1>
+    <>
+      <h1 style={{ marginBottom: 25 }}>📅 Tarefas de Hoje</h1>
 
       {tarefas.length === 0 ? (
-        <p>Nenhuma tarefa para hoje 🎉</p>
+        <Card>
+          <p>Nenhuma tarefa para hoje 🎉</p>
+        </Card>
       ) : (
         tarefas.map((t) => (
-          <div
-            key={t.id}
-            style={{
-              border: "1px solid #ddd",
-              padding: 12,
-              marginBottom: 10,
-              borderRadius: 6,
-              background: "#fff",
-            }}
-          >
-            <b>{t.titulo}</b> ({t.tipo})  
-            <br />
-            Cliente: <b>{t.cliente_nome}</b>
-            <br />
-            <button onClick={() => concluir(t.id)}>
+          <Card key={t.id}>
+            <div style={{ marginBottom: 10 }}>
+              <b>{t.titulo}</b> ({t.tipo})
+            </div>
+
+            <div style={{ marginBottom: 15 }}>
+              Cliente: <b>{t.cliente_nome}</b>
+            </div>
+
+            <Button onClick={() => concluir(t.id)}>
               Concluir
-            </button>
-          </div>
+            </Button>
+          </Card>
         ))
       )}
-    </div>
+    </>
   );
 }

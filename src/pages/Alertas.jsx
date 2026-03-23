@@ -11,47 +11,91 @@ export default function Alertas() {
   }, []);
 
   async function carregar() {
-    const data = await listarClientesSemContato();
+    try {
+      const data = await listarClientesSemContato();
 
-    // Mostrar apenas quem precisa de atenção
-    const filtrados = data.filter(c => c.dias >= 15);
+      if (!data) {
+        setClientes([]);
+        return;
+      }
 
-    setClientes(filtrados);
+      const filtrados = data.filter((c) => c.dias >= 30);
+      setClientes(filtrados);
+
+    } catch (erro) {
+      console.error("Erro ao carregar alertas:", erro);
+      setClientes([]);
+    }
   }
 
   function nivel(dias) {
-    if (dias >= 30) return { texto: "URGENTE", cor: "#e74c3c" };
-    if (dias >= 15) return { texto: "ATENÇÃO", cor: "#f39c12" };
-    return { texto: "OK", cor: "#2ecc71" };
+    if (dias >= 30)
+      return {
+        texto: "URGENTE",
+        cor: "#dc2626",
+        bg: "#fee2e2",
+      };
+
+    if (dias >= 15)
+      return {
+        texto: "ATENÇÃO",
+        cor: "#d97706",
+        bg: "#fef3c7",
+      };
+
+    return {
+      texto: "OK",
+      cor: "#16a34a",
+      bg: "#dcfce7",
+    };
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Alertas de Follow-up</h1>
+    <div style={styles.container}>
+      
+      {/* HEADER */}
+      <div style={styles.header}>
+        <h1 style={styles.title}>Alertas de Follow-up</h1>
+        <p style={styles.subtitle}>
+          Clientes que precisam de contato para não perder oportunidades
+        </p>
+      </div>
 
       {clientes.length === 0 ? (
-        <p>Todos os clientes estão em dia 👍</p>
+        <div style={styles.empty}>
+          <p>🎉 Todos os clientes estão em dia!</p>
+        </div>
       ) : (
-        <div style={grid}>
-          {clientes.map(cliente => {
+        <div style={styles.grid}>
+          {clientes.map((cliente) => {
             const status = nivel(cliente.dias);
 
             return (
-              <div key={cliente.cliente_id} style={card}>
-                <h3>{cliente.nome}</h3>
-                <p>{cliente.empresa}</p>
+              <div key={cliente.cliente_id} style={styles.card}>
+                
+                <div style={styles.cardHeader}>
+                  <h3>{cliente.nome}</h3>
+                  <span
+                    style={{
+                      ...styles.badge,
+                      color: status.cor,
+                      background: status.bg,
+                    }}
+                  >
+                    {status.texto}
+                  </span>
+                </div>
 
-                <p>
-                  <b>{cliente.dias} dias sem contato</b>
+                <p style={styles.empresa}>
+                  {cliente.empresa || "Sem empresa"}
                 </p>
 
-                <span style={{ color: status.cor, fontWeight: "bold" }}>
-                  {status.texto}
-                </span>
-
-                <br /><br />
+                <p style={styles.dias}>
+                  {cliente.dias} dias sem contato
+                </p>
 
                 <button
+                  style={styles.button}
                   onClick={() =>
                     navigate(`/clientes/${cliente.cliente_id}/contato`)
                   }
@@ -67,16 +111,81 @@ export default function Alertas() {
   );
 }
 
-const grid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-  gap: 20,
-  marginTop: 20
-};
+const styles = {
+  container: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px",
+  },
 
-const card = {
-  background: "#fff",
-  padding: 20,
-  borderRadius: 10,
-  boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
+  header: {
+    marginBottom: "10px",
+  },
+
+  title: {
+    marginBottom: "5px",
+  },
+
+  subtitle: {
+    color: "#64748b",
+    fontSize: "14px",
+  },
+
+  empty: {
+    background: "#fff",
+    padding: "30px",
+    borderRadius: "12px",
+    textAlign: "center",
+    boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+  },
+
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gap: "20px",
+  },
+
+  card: {
+    background: "#fff",
+    padding: "20px",
+    borderRadius: "12px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+  },
+
+  cardHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  badge: {
+    padding: "4px 10px",
+    borderRadius: "20px",
+    fontSize: "12px",
+    fontWeight: "bold",
+  },
+
+  empresa: {
+    color: "#64748b",
+    fontSize: "14px",
+  },
+
+  dias: {
+    fontWeight: "bold",
+    fontSize: "16px",
+  },
+
+  button: {
+    marginTop: "10px",
+    padding: "10px",
+    border: "none",
+    borderRadius: "8px",
+    background: "#2563eb",
+    color: "#fff",
+    cursor: "pointer",
+    fontWeight: "bold",
+  },
 };

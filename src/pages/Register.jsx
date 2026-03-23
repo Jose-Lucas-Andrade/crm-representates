@@ -1,34 +1,43 @@
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
 
-export default function Login() {
+export default function Register() {
 
+  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [mensagem, setMensagem] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin(e) {
+  async function handleRegister(e) {
     e.preventDefault();
 
     setLoading(true);
     setMensagem("");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    if (password.length < 6) {
+      setMensagem("A senha deve ter pelo menos 6 caracteres.");
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
       email,
       password
     });
 
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
+
     if (error) {
-      if (error.message.includes("Invalid login credentials")) {
-        setMensagem("Email ou senha inválidos.");
-      } else {
-        setMensagem("Erro ao fazer login. Tente novamente.");
-      }
+      setMensagem(error.message);
     } else {
-      setMensagem("Login realizado com sucesso!");
-      // Redirecionamento simples
-      window.location.href = "/dashboard";
+      setMensagem("Conta criada com sucesso! Faça login.");
+
+      setNome("");
+      setEmail("");
+      setPassword("");
     }
 
     setLoading(false);
@@ -37,11 +46,24 @@ export default function Login() {
   return (
     <div style={container}>
 
-      <h1 style={{ marginBottom: 20 }}>
-        Login
+      <h1 style={{ marginBottom: 10 }}>
+        Criar conta
       </h1>
 
-      <form onSubmit={handleLogin} style={form}>
+      <p style={{ marginBottom: 20, color: "#64748b" }}>
+        Comece grátis por 7 dias 🚀
+      </p>
+
+      <form onSubmit={handleRegister} style={form}>
+
+        <input
+          type="text"
+          placeholder="Seu nome"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          required
+          style={input}
+        />
 
         <input
           type="email"
@@ -54,7 +76,7 @@ export default function Login() {
 
         <input
           type="password"
-          placeholder="Sua senha"
+          placeholder="Crie uma senha"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -66,7 +88,7 @@ export default function Login() {
           disabled={loading}
           style={button}
         >
-          {loading ? "Entrando..." : "Entrar"}
+          {loading ? "Criando conta..." : "Criar conta"}
         </button>
 
       </form>
@@ -76,13 +98,6 @@ export default function Login() {
           {mensagem}
         </p>
       )}
-
-      <p style={{ marginTop: 20 }}>
-        Não tem conta?{" "}
-        <a href="/register" style={{ color: "#2563eb" }}>
-          Criar conta
-        </a>
-      </p>
 
     </div>
   );
@@ -111,7 +126,7 @@ const button = {
   padding: "10px",
   borderRadius: "6px",
   border: "none",
-  background: "#2563eb",
+  background: "#16a34a",
   color: "#fff",
   cursor: "pointer"
 };

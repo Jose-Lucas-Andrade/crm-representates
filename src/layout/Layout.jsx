@@ -1,71 +1,125 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
-
-export default function Layout({ children }) {
+export default function Layout() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   async function handleLogout() {
     await supabase.auth.signOut();
     navigate("/login");
   }
 
-  return (
-    <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
-      
-      {/* Sidebar */}
-      <aside
-        style={{
-          width: "220px",
-          background: "#1e293b",
-          color: "#fff",
-          padding: "20px",
-        }}
-      >
-        <h2 style={{ marginBottom: "30px" }}>CRM</h2>
+  const menu = [
+    { name: "Dashboard", path: "/" },
+    { name: "Clientes", path: "/clientes" },
+    { name: "Novo Cliente", path: "/clientes/novo" },
+    { name: "Alertas", path: "/alertas" },
+    { name: "Oportunidades", path: "/oportunidades" },
+    { name: "Tarefas", path: "/tarefas" },
+  ];
 
-        <nav style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <Link to="/" style={linkStyle}>Dashboard</Link>
-          <Link to="/clientes" style={linkStyle}>Clientes</Link>
-          <Link to="/clientes/novo" style={linkStyle}>Novo Cliente</Link>
-          <Link to="/alertas" style={linkStyle}>Alertas</Link>
-          <Link to="/oportunidades" style={linkStyle}>Oportunidades</Link>
-          <Link to="/tarefas" style={linkStyle}>Tarefas</Link>
+  return (
+    <div style={styles.container}>
+      {/* Sidebar */}
+      <aside style={styles.sidebar}>
+        <h2 style={styles.logo}>CRM Pro</h2>
+
+        <nav style={styles.nav}>
+          {menu.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              style={{
+                ...styles.link,
+                background:
+                  location.pathname === item.path
+                    ? "#1e293b"
+                    : "transparent",
+              }}
+            >
+              {item.name}
+            </Link>
+          ))}
         </nav>
 
-        <button
-          onClick={handleLogout}
-          style={{
-            marginTop: "40px",
-            padding: "10px",
-            background: "#ef4444",
-            border: "none",
-            color: "#fff",
-            cursor: "pointer",
-          }}
-        >
+        <button onClick={handleLogout} style={styles.logout}>
           Sair
         </button>
       </aside>
 
-      {/* Conteúdo */}
-      <main
-        style={{
-          flex: 1,
-          background: "#f1f5f9",
-          padding: "30px",
-          overflowY: "auto",
-        }}
-      >
-        {children}
-      </main>
+      {/* Área principal */}
+      <div style={styles.mainWrapper}>
+        <header style={styles.header}>
+          <span style={{ fontWeight: "bold" }}>
+            Sistema de Gestão para Representantes
+          </span>
+        </header>
+
+        {/* AQUI ESTÁ A CORREÇÃO */}
+        <main style={styles.content}>
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
 
-const linkStyle = {
-  color: "#fff",
-  textDecoration: "none",
-  padding: "8px",
-  background: "#334155",
+const styles = {
+  container: {
+    display: "flex",
+    height: "100vh",
+    fontFamily: "Inter, Arial, sans-serif",
+  },
+  sidebar: {
+    width: "230px",
+    background: "#0f172a",
+    color: "#fff",
+    padding: "25px",
+    display: "flex",
+    flexDirection: "column",
+  },
+  logo: {
+    marginBottom: "40px",
+  },
+  nav: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+  },
+  link: {
+    color: "#e2e8f0",
+    textDecoration: "none",
+    padding: "10px",
+    borderRadius: "6px",
+    transition: "0.2s",
+  },
+  logout: {
+    marginTop: "auto",
+    padding: "10px",
+    background: "#dc2626",
+    border: "none",
+    borderRadius: "6px",
+    color: "#fff",
+    cursor: "pointer",
+  },
+  mainWrapper: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    background: "#f8fafc",
+  },
+  header: {
+    height: "60px",
+    background: "#ffffff",
+    display: "flex",
+    alignItems: "center",
+    padding: "0 30px",
+    borderBottom: "1px solid #e2e8f0",
+  },
+  content: {
+    flex: 1,
+    padding: "30px",
+    overflowY: "auto",
+  },
 };

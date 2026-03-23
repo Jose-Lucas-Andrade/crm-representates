@@ -19,12 +19,11 @@ export default function ClienteDetalhe() {
   const [cliente, setCliente] = useState(null);
   const [contatos, setContatos] = useState([]);
   const [tarefas, setTarefas] = useState([]);
+  const [timeline, setTimeline] = useState([]);
 
-  // contato
   const [dataContato, setDataContato] = useState("");
   const [obs, setObs] = useState("");
 
-  // tarefa
   const [tituloTarefa, setTituloTarefa] = useState("");
   const [tipoTarefa, setTipoTarefa] = useState("Ligação");
   const [dataTarefa, setDataTarefa] = useState("");
@@ -41,18 +40,48 @@ export default function ClienteDetalhe() {
 
   async function carregarContatos() {
     const data = await listarContatos(id);
-    setContatos(data);
+    setContatos(data || []);
   }
 
   async function carregarTarefas() {
     const data = await listarTarefasDoCliente(id);
-    setTarefas(data);
+    setTarefas(data || []);
+  }
+
+  function gerarTimeline(contatosData, tarefasData) {
+    const contatosTimeline = contatosData.map((c) => ({
+      tipo: "contato",
+      data: c.data_contato,
+      texto: `Contato: ${c.observacao || "Sem observação"}`,
+    }));
+
+    const tarefasTimeline = tarefasData.map((t) => ({
+      tipo: "tarefa",
+      data: t.data,
+      texto: `Tarefa: ${t.titulo} (${t.tipo})`,
+    }));
+
+    const combinado = [...contatosTimeline, ...tarefasTimeline];
+
+    combinado.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+    setTimeline(combinado);
   }
 
   useEffect(() => {
-    carregarCliente();
-    carregarContatos();
-    carregarTarefas();
+    async function carregarTudo() {
+      await carregarCliente();
+
+      const contatosData = await listarContatos(id);
+      const tarefasData = await listarTarefasDoCliente(id);
+
+      setContatos(contatosData || []);
+      setTarefas(tarefasData || []);
+
+      gerarTimeline(contatosData || [], tarefasData || []);
+    }
+
+    carregarTudo();
   }, []);
 
   async function registrarContato(e) {
@@ -66,7 +95,12 @@ export default function ClienteDetalhe() {
 
     setDataContato("");
     setObs("");
-    carregarContatos();
+
+    const contatosData = await listarContatos(id);
+    const tarefasData = await listarTarefasDoCliente(id);
+
+    setContatos(contatosData);
+    gerarTimeline(contatosData, tarefasData);
   }
 
   async function registrarTarefa(e) {
@@ -81,102 +115,163 @@ export default function ClienteDetalhe() {
 
     setTituloTarefa("");
     setDataTarefa("");
-    carregarTarefas();
+
+    const contatosData = await listarContatos(id);
+    const tarefasData = await listarTarefasDoCliente(id);
+
+    setTarefas(tarefasData);
+    gerarTimeline(contatosData, tarefasData);
   }
 
   async function concluir(idTarefa) {
     await concluirTarefa(idTarefa);
-    carregarTarefas();
+
+    const contatosData = await listarContatos(id);
+    const tarefasData = await listarTarefasDoCliente(id);
+
+    setTarefas(tarefasData);
+    gerarTimeline(contatosData, tarefasData);
   }
 
-  if (!cliente) return <p>Carregando...</p>;
-
   return (
-    <div style={{ padding: 30 }}>
-      <h1>{cliente.nome}</h1>
-      <p>
-        <b>Empresa:</b> {cliente.empresa}
-      </p>
-
-      {/* ================= CONTATOS ================= */}
-      <h2>📞 Registrar Contato</h2>
-      <Card>
-        <form onSubmit={registrarContato}>
-          <input
-            type="date"
-            value={dataContato}
-            onChange={(e) => setDataContato(e.target.value)}
-            required
-          />
-          <input
-            placeholder="Observação"
-            value={obs}
-            onChange={(e) => setObs(e.target.value)}
-          />
-          <Button type="submit">Salvar</Button>
-        </form>
-      </Card>
-
-      <h3>Histórico de Contatos</h3>
-      {contatos.length === 0 ? (
-        <p>Nenhum contato ainda</p>
+    <>
+      {!cliente ? (
+        <p>Carregando cliente...</p>
       ) : (
-        contatos.map((c) => (
-          <Card key={c.id}>
-            📅 {c.data_contato} — {c.observacao}
+        <>
+          <h1 style={{ marginBottom: 5 }}>{cliente.nome}</h1>
+          <p style={{ marginBottom: 30 }}>
+            <b>Empresa:</b> {cliente.empresa}
+          </p>
+
+          {/* TIMELINE */}
+          <h2 style={{ marginBottom: 15 }}>🧠 Histórico do Cliente</h2>
+
+          {timeline.length === 0 ? (
+            <Card>
+              <p>Nenhuma atividade registrada.</p>
+            </Card>
+          ) : (
+            timeline.map((item, index) => (
+              <Card key={index}>
+                <b>{item.data}</b> — {item.texto}
+              </Card>
+            ))
+          )}
+
+          {/* CONTATO */}
+          <h2 style={{ marginTop: 40, marginBottom: 15 }}>
+            📞 Registrar Contato
+          </h2>
+
+          <Card>
+            <form
+              onSubmit={registrarContato}
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 15,
+                alignItems: "center",
+              }}
+            >
+              <input
+                type="date"
+                value={dataContato}
+                onChange={(e) => setDataContato(e.target.value)}
+                required
+                style={inputStyle}
+              />
+
+              <input
+                placeholder="Observação"
+                value={obs}
+                onChange={(e) => setObs(e.target.value)}
+                style={{ ...inputStyle, minWidth: "250px" }}
+              />
+
+              <Button type="submit">Salvar</Button>
+            </form>
           </Card>
-        ))
-      )}
 
-      {/* ================= TAREFAS ================= */}
-      <h2 style={{ marginTop: 30 }}>📅 Tarefas Pendentes</h2>
+          {/* TAREFAS */}
+          <h2 style={{ marginTop: 40, marginBottom: 15 }}>
+            📅 Tarefas Pendentes
+          </h2>
 
-      {tarefas.length === 0 ? (
-        <p>Nenhuma tarefa pendente 🎉</p>
-      ) : (
-        tarefas.map((t) => (
-          <Card key={t.id}>
-            <b>{t.titulo}</b> ({t.tipo})
-            <br />
-            Data: {t.data}
-            <br /><br />
-            <Button onClick={() => concluir(t.id)}>
-              Concluir
-            </Button>
+          {tarefas.length === 0 ? (
+            <Card>
+              <p>Nenhuma tarefa pendente 🎉</p>
+            </Card>
+          ) : (
+            tarefas.map((t) => (
+              <Card key={t.id}>
+                <div style={{ marginBottom: 10 }}>
+                  <b>{t.titulo}</b> ({t.tipo})
+                </div>
+
+                <div style={{ marginBottom: 15 }}>
+                  Data: {t.data}
+                </div>
+
+                <Button onClick={() => concluir(t.id)}>
+                  Concluir
+                </Button>
+              </Card>
+            ))
+          )}
+
+          <h3 style={{ marginTop: 30, marginBottom: 15 }}>
+            ➕ Criar Nova Tarefa
+          </h3>
+
+          <Card>
+            <form
+              onSubmit={registrarTarefa}
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 15,
+                alignItems: "center",
+              }}
+            >
+              <input
+                placeholder="Título da tarefa"
+                value={tituloTarefa}
+                onChange={(e) => setTituloTarefa(e.target.value)}
+                required
+                style={{ ...inputStyle, minWidth: "220px" }}
+              />
+
+              <select
+                value={tipoTarefa}
+                onChange={(e) => setTipoTarefa(e.target.value)}
+                style={inputStyle}
+              >
+                <option>Ligação</option>
+                <option>Visita</option>
+                <option>Proposta</option>
+                <option>Outro</option>
+              </select>
+
+              <input
+                type="date"
+                value={dataTarefa}
+                onChange={(e) => setDataTarefa(e.target.value)}
+                required
+                style={inputStyle}
+              />
+
+              <Button type="submit">Criar tarefa</Button>
+            </form>
           </Card>
-        ))
+        </>
       )}
-
-      <h3>➕ Criar Nova Tarefa</h3>
-      <Card>
-        <form onSubmit={registrarTarefa}>
-          <input
-            placeholder="Título da tarefa"
-            value={tituloTarefa}
-            onChange={(e) => setTituloTarefa(e.target.value)}
-            required
-          />
-
-          <select
-            value={tipoTarefa}
-            onChange={(e) => setTipoTarefa(e.target.value)}
-          >
-            <option>Ligação</option>
-            <option>Visita</option>
-            <option>Proposta</option>
-            <option>Outro</option>
-          </select>
-
-          <input
-            type="date"
-            value={dataTarefa}
-            onChange={(e) => setDataTarefa(e.target.value)}
-            required
-          />
-
-          <Button type="submit">Criar tarefa</Button>
-        </form>
-      </Card>
-    </div>
+    </>
   );
 }
+
+const inputStyle = {
+  padding: "10px",
+  borderRadius: "6px",
+  border: "1px solid #cbd5e1",
+};

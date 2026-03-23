@@ -4,8 +4,12 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import PrivateRoute from "./routes/PrivateRoute";
 import Layout from "./layout/Layout";
 
+import { AuthProvider } from "./context/AuthContext";
+
 // Pages
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Bloqueado from "./pages/Bloqueado";
 import Dashboard from "./pages/Dashboard";
 import Clientes from "./pages/Clientes";
 import ClienteDetalhe from "./pages/ClienteDetalhe";
@@ -14,103 +18,42 @@ import NovoCliente from "./pages/NovoCliente";
 import NovoContato from "./pages/NovoContato";
 import Opportunities from "./pages/Opportunities";
 import DiasSemContato from "./pages/DiasSemContato";
-import Alertas from "./pages/Alertas";
 import Tarefas from "./pages/Tarefas";
-
 
 export default function App() {
   return (
     <BrowserRouter>
-      <ErrorBoundary>
-        <Routes>
-          {/* Rota pública */}
-          <Route path="/login" element={<Login />} />
+      <AuthProvider> 
+        <ErrorBoundary>
+          <Routes>
 
-          {/* Rotas protegidas */}
-          <Route
-            path="/"
-            element={
-              <PrivateRoute>
-              <Layout>
-              <Dashboard />
-              </Layout>
-              </PrivateRoute>
-        }
-      />
+            {/* Rotas públicas */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
+            {/* Rotas protegidas */}
+            <Route
+              element={
+                <PrivateRoute>
+                  <Layout />
+                </PrivateRoute>
+              }
+            >
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/clientes" element={<Clientes />} />
+              <Route path="/clientes/novo" element={<NovoCliente />} />
+              <Route path="/clientes/:id" element={<ClienteDetalhe />} />
+              <Route path="/clientes/:id/editar" element={<EditarCliente />} />
+              <Route path="/clientes/:id/contato" element={<NovoContato />} />
+              <Route path="/oportunidades" element={<Opportunities />} />
+              <Route path="/alertas" element={<DiasSemContato />} />
+              <Route path="/tarefas" element={<Tarefas />} />
+              <Route path="/bloqueado" element={<Bloqueado />} />
+            </Route>
 
-          <Route
-            path="/clientes"
-            element={
-              <PrivateRoute>
-                <Clientes />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/clientes/novo"
-            element={
-              <PrivateRoute>
-                <NovoCliente />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/clientes/:id"
-            element={
-              <PrivateRoute>
-                <ClienteDetalhe />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/clientes/:id/editar"
-            element={
-              <PrivateRoute>
-                <EditarCliente />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/clientes/:id/contato"
-            element={
-              <PrivateRoute>
-                <NovoContato />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/oportunidades"
-            element={
-              <PrivateRoute>
-                <Opportunities />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/alertas"
-            element={
-              <PrivateRoute>
-                <DiasSemContato />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/tarefas"
-            element={
-              <PrivateRoute>
-                <Tarefas />
-              </PrivateRoute>
-            }
-          />
-        </Routes>
-      </ErrorBoundary>
+          </Routes>
+        </ErrorBoundary>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

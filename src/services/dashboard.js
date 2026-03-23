@@ -21,3 +21,25 @@ export async function contatosHoje() {
 
   return data;
 }
+
+export async function tarefasPendentes() {
+  const { data, error } = await supabase.rpc("tarefas_pendentes");
+
+  if (error) {
+    console.error("Erro ao buscar tarefas pendentes:", error.message);
+    return 0;
+  }
+
+  return data;
+}
+
+export async function tarefasVencidas() {
+  const { data, error } = await supabase.rpc("tarefas_vencidas");
+
+  if (error) {
+    console.error("Erro ao buscar tarefas vencidas:", error.message);
+    return 0;
+  }
+
+  return data;
+}

@@ -1,7 +1,18 @@
 import { useEffect, useState } from "react";
 import { listarClientesPorStatus, atualizarStatus } from "../services/oportunidades";
 
+import {
+  DndContext,
+  closestCenter
+} from "@dnd-kit/core";
+
+import {
+  SortableContext,
+  verticalListSortingStrategy
+} from "@dnd-kit/sortable";
+
 export default function Opportunities() {
+
   const [clientes, setClientes] = useState([]);
 
   useEffect(() => {
@@ -22,59 +33,94 @@ export default function Opportunities() {
   const negociacao = clientes.filter(c => c.status === "Negociação");
   const cliente = clientes.filter(c => c.status === "Cliente");
 
+  function handleDragEnd(event) {
+
+    const { active, over } = event;
+
+    if (!over) return;
+
+    const cliente_id = active.id;
+    const novoStatus = over.id;
+
+    mover(cliente_id, novoStatus);
+  }
+
   return (
     <div style={{ padding: 20 }}>
-      <h1>Pipeline de Vendas</h1>
 
-      <div style={board}>
-        <Coluna
-          titulo="Prospect"
-          clientes={prospect}
-          onMover={mover}
-          cor="#3498db"
-        />
+      <h1 style={{ marginBottom: 25 }}>Oportunidades</h1>
 
-        <Coluna
-          titulo="Negociação"
-          clientes={negociacao}
-          onMover={mover}
-          cor="#f39c12"
-        />
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
 
-        <Coluna
-          titulo="Cliente"
-          clientes={cliente}
-          onMover={mover}
-          cor="#2ecc71"
-        />
-      </div>
+        <div style={board}>
+
+          <Coluna
+            id="Prospect"
+            titulo="Prospect"
+            clientes={prospect}
+            onMover={mover}
+          />
+
+          <Coluna
+            id="Negociação"
+            titulo="Negociação"
+            clientes={negociacao}
+            onMover={mover}
+          />
+
+          <Coluna
+            id="Cliente"
+            titulo="Cliente"
+            clientes={cliente}
+            onMover={mover}
+          />
+
+        </div>
+
+      </DndContext>
+
     </div>
   );
 }
 
-function Coluna({ titulo, clientes, onMover, cor }) {
+function Coluna({ id, titulo, clientes, onMover }) {
+
   return (
-    <div style={coluna}>
-      <h2 style={{ color: cor }}>{titulo}</h2>
+    <div style={coluna} id={id}>
 
-      {clientes.length === 0 && <p>Nenhum</p>}
+      <h2>{titulo}</h2>
 
-      {clientes.map(c => (
-        <div key={c.id} style={card}>
-          <b>{c.nome}</b>
-          <p>{c.empresa}</p>
+      <SortableContext
+        items={clientes.map(c => c.id)}
+        strategy={verticalListSortingStrategy}
+      >
 
-          <select
-            value={c.status}
-            onChange={(e) => onMover(c.id, e.target.value)}
-          >
-            <option>Prospect</option>
-            <option>Negociação</option>
-            <option>Cliente</option>
-            <option>Inativo</option>
-          </select>
-        </div>
-      ))}
+        {clientes.map(c => (
+
+          <div key={c.id} style={card}>
+
+            <b>{c.nome}</b>
+            <p>{c.empresa}</p>
+
+            <select
+              value={c.status}
+              onChange={(e) => onMover(c.id, e.target.value)}
+            >
+              <option>Prospect</option>
+              <option>Negociação</option>
+              <option>Cliente</option>
+              <option>Inativo</option>
+            </select>
+
+          </div>
+
+        ))}
+
+      </SortableContext>
+
     </div>
   );
 }
@@ -82,21 +128,20 @@ function Coluna({ titulo, clientes, onMover, cor }) {
 const board = {
   display: "grid",
   gridTemplateColumns: "repeat(3, 1fr)",
-  gap: 20,
-  marginTop: 20
+  gap: 20
 };
 
 const coluna = {
   background: "#f4f6f8",
   padding: 15,
   borderRadius: 10,
-  minHeight: 400
+  minHeight: 450
 };
 
 const card = {
   background: "#fff",
-  padding: 10,
+  padding: 12,
   marginBottom: 10,
   borderRadius: 6,
-  boxShadow: "0 1px 4px rgba(0,0,0,0.1)"
+  boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
 };
