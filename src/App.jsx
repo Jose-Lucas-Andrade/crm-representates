@@ -4,7 +4,6 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import PrivateRoute from "./routes/PrivateRoute";
 import Layout from "./layout/Layout";
 
-import { AuthProvider } from "./context/AuthContext";
 
 // Pages
 import Login from "./pages/Login";
@@ -23,7 +22,6 @@ import Tarefas from "./pages/Tarefas";
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider> 
         <ErrorBoundary>
           <Routes>
 
@@ -53,7 +51,6 @@ export default function App() {
 
           </Routes>
         </ErrorBoundary>
-      </AuthProvider>
     </BrowserRouter>
   );
 }
