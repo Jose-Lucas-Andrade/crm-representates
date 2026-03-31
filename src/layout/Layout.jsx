@@ -23,7 +23,7 @@ export default function Layout() {
     <div style={styles.container}>
       {/* Sidebar */}
       <aside style={styles.sidebar}>
-        <h2 style={styles.logo}>CRM Pro</h2>
+        <h2 style={styles.logo}>ClienteFácil</h2>
 
         <nav style={styles.nav}>
           {menu.map((item) => (
