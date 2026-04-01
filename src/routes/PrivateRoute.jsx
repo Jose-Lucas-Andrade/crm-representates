@@ -1,51 +1,97 @@
-import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
 import { supabase } from "../supabaseClient";
+
+function isProfileExpirado(profile) {
+  if (!profile) {
+    return false;
+  }
+
+  const agora = new Date();
+
+  if (profile.plano === "pro") {
+    return (
+      Boolean(profile.proxima_cobranca) &&
+      new Date(profile.proxima_cobranca) < agora
+    );
+  }
+
+  if (profile.plano === "trial" || profile.plano === "basic") {
+    return (
+      Boolean(profile.trial_fim) &&
+      new Date(profile.trial_fim) < agora
+    );
+  }
+
+  return false;
+}
 
 export default function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
-  const [ativo, setAtivo] = useState(null);
+  const [bloqueado, setBloqueado] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      verificarAcesso();
-    } else {
-      setAtivo(false); // 🔥 evita travamento
+    if (!user) {
+      setBloqueado(false);
+      setChecking(false);
+      return;
     }
+
+    let mounted = true;
+
+    async function verificarAcesso() {
+      setChecking(true);
+
+      try {
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("id, plano, trial_fim, proxima_cobranca")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Erro ao buscar profile:", error);
+          if (mounted) {
+            setBloqueado(false);
+          }
+          return;
+        }
+
+        if (mounted) {
+          setBloqueado(isProfileExpirado(profile));
+        }
+      } catch (error) {
+        console.error("Erro inesperado ao validar acesso:", error);
+        if (mounted) {
+          setBloqueado(false);
+        }
+      } finally {
+        if (mounted) {
+          setChecking(false);
+        }
+      }
+    }
+
+    verificarAcesso();
+
+    return () => {
+      mounted = false;
+    };
   }, [user]);
 
-  async function verificarAcesso() {
-    try {
-      const { data, error } = await supabase.rpc("usuario_ativo");
-
-      if (error) {
-        console.error("Erro ao verificar acesso:", error);
-        setAtivo(false);
-      } else {
-        setAtivo(data);
-      }
-    } catch (err) {
-      console.error("Erro inesperado:", err);
-      setAtivo(false);
-    }
-  }
-
-  // 🔄 Aguarda apenas autenticação OU verificação se tiver usuário
-  if (loading || (user && ativo === null)) {
+  if (loading || checking) {
     return <div>Carregando...</div>;
   }
 
-  // 🔒 Não logado → login direto
   if (!user) {
     return <Navigate to="/login" />;
   }
 
-  // 🚫 Sem acesso → bloqueado
-  if (!ativo) {
+  if (bloqueado) {
     return <Navigate to="/bloqueado" />;
   }
 
-  // ✅ Liberado
   return children;
 }

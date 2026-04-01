@@ -1,6 +1,6 @@
 import { supabase } from "../supabaseClient";
 
-export async function listarClientesSemContato(dias = 30) {
+export async function listarClientesSemContato(dias = 15) {
   const { data, error } = await supabase
     .rpc("clientes_sem_contato", { dias_limite: dias });
 

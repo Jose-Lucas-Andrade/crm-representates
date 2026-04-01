@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { criarCliente } from "../services/clientes";
+import {
+  CLIENTE_STATUS,
+  CLIENTE_STATUS_OPTIONS,
+} from "../constants/clientes";
 
 export default function NovoCliente() {
   const navigate = useNavigate();
@@ -10,7 +14,7 @@ export default function NovoCliente() {
   const [telefone, setTelefone] = useState("");
   const [email, setEmail] = useState("");
   const [cidade, setCidade] = useState("");
-  const [status, setStatus] = useState("Prospect");
+  const [status, setStatus] = useState(CLIENTE_STATUS.PROSPECT);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -38,7 +42,6 @@ export default function NovoCliente() {
         </p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
-          
           <div style={styles.row}>
             <div style={styles.field}>
               <label>Nome *</label>
@@ -97,18 +100,18 @@ export default function NovoCliente() {
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
-                <option value="Prospect">Prospect</option>
-                <option value="Contato">Contato</option>
-                <option value="Negociação">Negociação</option>
-                <option value="Cliente">Cliente</option>
-                <option value="Perdido">Perdido</option>
+                {CLIENTE_STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
           <div style={styles.actions}>
             <button type="submit" style={styles.button}>
-              💾 Salvar Cliente
+              Salvar cliente
             </button>
           </div>
         </form>
@@ -122,7 +125,6 @@ const styles = {
     display: "flex",
     justifyContent: "center",
   },
-
   card: {
     width: "100%",
     maxWidth: "700px",
@@ -131,28 +133,23 @@ const styles = {
     borderRadius: "12px",
     boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
   },
-
   title: {
     marginBottom: "5px",
   },
-
   subtitle: {
     marginBottom: "25px",
     color: "#64748b",
     fontSize: "14px",
   },
-
   form: {
     display: "flex",
     flexDirection: "column",
     gap: "20px",
   },
-
   row: {
     display: "flex",
     gap: "15px",
   },
-
   field: {
     flex: 1,
     display: "flex",
@@ -160,18 +157,15 @@ const styles = {
     gap: "5px",
     fontSize: "14px",
   },
-
   input: {
     padding: "10px",
     borderRadius: "8px",
     border: "1px solid #cbd5e1",
     fontSize: "14px",
   },
-
   actions: {
     marginTop: "10px",
   },
-
   button: {
     width: "100%",
     padding: "12px",

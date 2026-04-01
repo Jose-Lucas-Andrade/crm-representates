@@ -1,126 +1,109 @@
 import { useEffect, useState } from "react";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { listarClientesPorStatus, atualizarStatus } from "../services/oportunidades";
-
 import {
-  DndContext,
-  closestCenter
-} from "@dnd-kit/core";
-
-import {
-  SortableContext,
-  verticalListSortingStrategy
-} from "@dnd-kit/sortable";
+  CLIENTE_STATUS,
+  CLIENTE_STATUS_OPTIONS,
+} from "../constants/clientes";
 
 export default function Opportunities() {
-
   const [clientes, setClientes] = useState([]);
 
   useEffect(() => {
+    let ativo = true;
+
+    async function carregar() {
+      const data = await listarClientesPorStatus();
+      if (ativo) {
+        setClientes(data);
+      }
+    }
+
     carregar();
+
+    return () => {
+      ativo = false;
+    };
   }, []);
 
-  async function carregar() {
+  async function mover(clienteId, novoStatus) {
+    await atualizarStatus(clienteId, novoStatus);
     const data = await listarClientesPorStatus();
     setClientes(data);
   }
 
-  async function mover(cliente_id, novoStatus) {
-    await atualizarStatus(cliente_id, novoStatus);
-    carregar();
-  }
-
-  const prospect = clientes.filter(c => c.status === "Prospect");
-  const negociacao = clientes.filter(c => c.status === "Negociação");
-  const cliente = clientes.filter(c => c.status === "Cliente");
+  const prospect = clientes.filter((cliente) => cliente.status === CLIENTE_STATUS.PROSPECT);
+  const negociacao = clientes.filter((cliente) => cliente.status === CLIENTE_STATUS.NEGOCIACAO);
+  const clientesAtivos = clientes.filter((cliente) => cliente.status === CLIENTE_STATUS.CLIENTE);
 
   function handleDragEnd(event) {
-
     const { active, over } = event;
 
     if (!over) return;
 
-    const cliente_id = active.id;
-    const novoStatus = over.id;
-
-    mover(cliente_id, novoStatus);
+    mover(active.id, over.id);
   }
 
   return (
     <div style={{ padding: 20 }}>
-
       <h1 style={{ marginBottom: 25 }}>Oportunidades</h1>
 
-      <DndContext
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-
+      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div style={board}>
-
           <Coluna
-            id="Prospect"
+            id={CLIENTE_STATUS.PROSPECT}
             titulo="Prospect"
             clientes={prospect}
             onMover={mover}
           />
 
           <Coluna
-            id="Negociação"
-            titulo="Negociação"
+            id={CLIENTE_STATUS.NEGOCIACAO}
+            titulo="Negociacao"
             clientes={negociacao}
             onMover={mover}
           />
 
           <Coluna
-            id="Cliente"
+            id={CLIENTE_STATUS.CLIENTE}
             titulo="Cliente"
-            clientes={cliente}
+            clientes={clientesAtivos}
             onMover={mover}
           />
-
         </div>
-
       </DndContext>
-
     </div>
   );
 }
 
 function Coluna({ id, titulo, clientes, onMover }) {
-
   return (
     <div style={coluna} id={id}>
-
       <h2>{titulo}</h2>
 
       <SortableContext
-        items={clientes.map(c => c.id)}
+        items={clientes.map((cliente) => cliente.id)}
         strategy={verticalListSortingStrategy}
       >
-
-        {clientes.map(c => (
-
-          <div key={c.id} style={card}>
-
-            <b>{c.nome}</b>
-            <p>{c.empresa}</p>
+        {clientes.map((cliente) => (
+          <div key={cliente.id} style={card}>
+            <b>{cliente.nome}</b>
+            <p>{cliente.empresa}</p>
 
             <select
-              value={c.status}
-              onChange={(e) => onMover(c.id, e.target.value)}
+              value={cliente.status}
+              onChange={(e) => onMover(cliente.id, e.target.value)}
             >
-              <option>Prospect</option>
-              <option>Negociação</option>
-              <option>Cliente</option>
-              <option>Inativo</option>
+              {CLIENTE_STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
-
           </div>
-
         ))}
-
       </SortableContext>
-
     </div>
   );
 }
@@ -128,14 +111,14 @@ function Coluna({ id, titulo, clientes, onMover }) {
 const board = {
   display: "grid",
   gridTemplateColumns: "repeat(3, 1fr)",
-  gap: 20
+  gap: 20,
 };
 
 const coluna = {
   background: "#f4f6f8",
   padding: 15,
   borderRadius: 10,
-  minHeight: 450
+  minHeight: 450,
 };
 
 const card = {
@@ -143,5 +126,5 @@ const card = {
   padding: 12,
   marginBottom: 10,
   borderRadius: 6,
-  boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
+  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
 };

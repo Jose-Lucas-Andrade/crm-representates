@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
-import { listarClientes, excluirCliente } from "../services/clientes";
-
+import { excluirCliente, listarClientes } from "../services/clientes";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import {
+  CLIENTE_STATUS_OPTIONS,
+  getClienteStatusLabel,
+} from "../constants/clientes";
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -12,27 +14,35 @@ export default function Clientes() {
   const [filtroStatus, setFiltroStatus] = useState("Todos");
 
   useEffect(() => {
-    carregarClientes();
-  }, []);
+    let ativo = true;
 
-  async function carregarClientes() {
-    const data = await listarClientes();
-    setClientes(data);
-  }
+    async function carregarClientes() {
+      const data = await listarClientes();
+      if (ativo) {
+        setClientes(data);
+      }
+    }
+
+    carregarClientes();
+
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   async function remover(id) {
     if (confirm("Deseja excluir este cliente?")) {
       await excluirCliente(id);
-      carregarClientes();
+      const data = await listarClientes();
+      setClientes(data);
     }
   }
 
-  // FILTRO
-  const clientesFiltrados = clientes.filter((c) => {
-    const texto = (c.nome + " " + (c.empresa || "")).toLowerCase();
+  const clientesFiltrados = clientes.filter((cliente) => {
+    const texto = `${cliente.nome} ${cliente.empresa || ""}`.toLowerCase();
     const buscaOk = texto.includes(busca.toLowerCase());
     const statusOk =
-      filtroStatus === "Todos" || c.status === filtroStatus;
+      filtroStatus === "Todos" || cliente.status === filtroStatus;
 
     return buscaOk && statusOk;
   });
@@ -41,7 +51,6 @@ export default function Clientes() {
     <>
       <h1 style={{ marginBottom: "25px" }}>Clientes</h1>
 
-      {/* Barra de busca e filtros */}
       <Card>
         <div
           style={{
@@ -73,11 +82,12 @@ export default function Clientes() {
               border: "1px solid #cbd5e1",
             }}
           >
-            <option>Todos</option>
-            <option>Prospect</option>
-            <option>Negociação</option>
-            <option>Cliente</option>
-            <option>Inativo</option>
+            <option value="Todos">Todos</option>
+            {CLIENTE_STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
 
           <Link to="/clientes/novo">
@@ -86,36 +96,32 @@ export default function Clientes() {
         </div>
       </Card>
 
-      {/* Lista */}
       <div style={{ marginTop: 25 }}>
         {clientesFiltrados.length === 0 ? (
           <Card>
             <p>Nenhum cliente encontrado.</p>
           </Card>
         ) : (
-          clientesFiltrados.map((c) => (
-            <Card key={c.id}>
+          clientesFiltrados.map((cliente) => (
+            <Card key={cliente.id}>
               <div style={{ marginBottom: 10 }}>
-                <b>{c.nome}</b> — {c.empresa}
+                <b>{cliente.nome}</b> - {cliente.empresa}
               </div>
 
               <div style={{ marginBottom: 15 }}>
-                Status: <b>{c.status}</b>
+                Status: <b>{getClienteStatusLabel(cliente.status)}</b>
               </div>
 
               <div style={{ display: "flex", gap: 10 }}>
-                <Link to={`/clientes/${c.id}`}>
+                <Link to={`/clientes/${cliente.id}`}>
                   <Button variant="secondary">Ver</Button>
                 </Link>
 
-                <Link to={`/clientes/${c.id}/editar`}>
+                <Link to={`/clientes/${cliente.id}/editar`}>
                   <Button variant="secondary">Editar</Button>
                 </Link>
 
-                <Button
-                  variant="danger"
-                  onClick={() => remover(c.id)}
-                >
+                <Button variant="danger" onClick={() => remover(cliente.id)}>
                   Excluir
                 </Button>
               </div>

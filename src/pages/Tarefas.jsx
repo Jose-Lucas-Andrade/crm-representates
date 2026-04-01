@@ -1,52 +1,54 @@
 import { useEffect, useState } from "react";
-
-import {
-  listarTarefasDoDia,
-  concluirTarefa,
-} from "../services/tarefas";
-
+import { concluirTarefa, listarTarefasDoDia } from "../services/tarefas";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 
 export default function Tarefas() {
   const [tarefas, setTarefas] = useState([]);
 
-  async function carregar() {
-    const data = await listarTarefasDoDia();
-    setTarefas(data);
-  }
-
   useEffect(() => {
+    let ativo = true;
+
+    async function carregar() {
+      const data = await listarTarefasDoDia();
+      if (ativo) {
+        setTarefas(data);
+      }
+    }
+
     carregar();
+
+    return () => {
+      ativo = false;
+    };
   }, []);
 
   async function concluir(id) {
     await concluirTarefa(id);
-    carregar();
+    const data = await listarTarefasDoDia();
+    setTarefas(data);
   }
 
   return (
     <>
-      <h1 style={{ marginBottom: 25 }}>📅 Tarefas de Hoje</h1>
+      <h1 style={{ marginBottom: 25 }}>Tarefas de hoje</h1>
 
       {tarefas.length === 0 ? (
         <Card>
-          <p>Nenhuma tarefa para hoje 🎉</p>
+          <p>Nenhuma tarefa para hoje.</p>
         </Card>
       ) : (
-        tarefas.map((t) => (
-          <Card key={t.id}>
+        tarefas.map((tarefa) => (
+          <Card key={tarefa.id}>
             <div style={{ marginBottom: 10 }}>
-              <b>{t.titulo}</b> ({t.tipo})
+              <b>{tarefa.titulo}</b> ({tarefa.tipo})
             </div>
 
             <div style={{ marginBottom: 15 }}>
-              Cliente: <b>{t.cliente_nome}</b>
+              Cliente: <b>{tarefa.cliente_nome}</b>
             </div>
 
-            <Button onClick={() => concluir(t.id)}>
-              Concluir
-            </Button>
+            <Button onClick={() => concluir(tarefa.id)}>Concluir</Button>
           </Card>
         ))
       )}

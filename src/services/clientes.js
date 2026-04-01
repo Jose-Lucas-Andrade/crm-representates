@@ -1,4 +1,5 @@
 import { supabase } from "../supabaseClient";
+import { CLIENTE_STATUS } from "../constants/clientes";
 
 export async function listarClientes() {
   const { data, error } = await supabase
@@ -33,7 +34,7 @@ export async function criarCliente(cliente) {
       telefone: cliente.telefone,
       email: cliente.email,
       cidade: cliente.cidade,
-      status: cliente.status || "Prospect",
+      status: cliente.status || CLIENTE_STATUS.PROSPECT,
     },
   ]);
 

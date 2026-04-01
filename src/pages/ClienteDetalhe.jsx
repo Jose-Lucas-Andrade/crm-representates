@@ -1,31 +1,24 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
-import { listarContatos, criarContato } from "../services/contatos";
+import { criarContato, listarContatos } from "../services/contatos";
 import {
+  concluirTarefa,
   criarTarefa,
   listarTarefasDoCliente,
-  concluirTarefa,
 } from "../services/tarefas";
-
 import { supabase } from "../supabaseClient";
-
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 
 export default function ClienteDetalhe() {
   const { id } = useParams();
-
   const [cliente, setCliente] = useState(null);
-  const [contatos, setContatos] = useState([]);
   const [tarefas, setTarefas] = useState([]);
   const [timeline, setTimeline] = useState([]);
-
   const [dataContato, setDataContato] = useState("");
   const [obs, setObs] = useState("");
-
   const [tituloTarefa, setTituloTarefa] = useState("");
-  const [tipoTarefa, setTipoTarefa] = useState("Ligação");
+  const [tipoTarefa, setTipoTarefa] = useState("Ligacao");
   const [dataTarefa, setDataTarefa] = useState("");
 
   async function carregarCliente() {
@@ -38,51 +31,52 @@ export default function ClienteDetalhe() {
     setCliente(data);
   }
 
-  async function carregarContatos() {
-    const data = await listarContatos(id);
-    setContatos(data || []);
-  }
-
-  async function carregarTarefas() {
-    const data = await listarTarefasDoCliente(id);
-    setTarefas(data || []);
-  }
-
   function gerarTimeline(contatosData, tarefasData) {
-    const contatosTimeline = contatosData.map((c) => ({
+    const contatosTimeline = contatosData.map((contato) => ({
       tipo: "contato",
-      data: c.data_contato,
-      texto: `Contato: ${c.observacao || "Sem observação"}`,
+      data: contato.data_contato,
+      texto: `Contato: ${contato.observacao || "Sem observacao"}`,
     }));
 
-    const tarefasTimeline = tarefasData.map((t) => ({
+    const tarefasTimeline = tarefasData.map((tarefa) => ({
       tipo: "tarefa",
-      data: t.data,
-      texto: `Tarefa: ${t.titulo} (${t.tipo})`,
+      data: tarefa.data,
+      texto: `Tarefa: ${tarefa.titulo} (${tarefa.tipo})`,
     }));
 
     const combinado = [...contatosTimeline, ...tarefasTimeline];
-
     combinado.sort((a, b) => new Date(b.data) - new Date(a.data));
-
     setTimeline(combinado);
   }
 
   useEffect(() => {
+    let ativo = true;
+
     async function carregarTudo() {
-      await carregarCliente();
+      const { data } = await supabase
+        .from("clientes")
+        .select("*")
+        .eq("id", id)
+        .single();
 
       const contatosData = await listarContatos(id);
       const tarefasData = await listarTarefasDoCliente(id);
 
-      setContatos(contatosData || []);
-      setTarefas(tarefasData || []);
+      if (!ativo) {
+        return;
+      }
 
+      setCliente(data);
+      setTarefas(tarefasData || []);
       gerarTimeline(contatosData || [], tarefasData || []);
     }
 
     carregarTudo();
-  }, []);
+
+    return () => {
+      ativo = false;
+    };
+  }, [id]);
 
   async function registrarContato(e) {
     e.preventDefault();
@@ -95,12 +89,13 @@ export default function ClienteDetalhe() {
 
     setDataContato("");
     setObs("");
+    await carregarCliente();
 
     const contatosData = await listarContatos(id);
     const tarefasData = await listarTarefasDoCliente(id);
 
-    setContatos(contatosData);
-    gerarTimeline(contatosData, tarefasData);
+    setTarefas(tarefasData || []);
+    gerarTimeline(contatosData || [], tarefasData || []);
   }
 
   async function registrarTarefa(e) {
@@ -115,22 +110,24 @@ export default function ClienteDetalhe() {
 
     setTituloTarefa("");
     setDataTarefa("");
+    await carregarCliente();
 
     const contatosData = await listarContatos(id);
     const tarefasData = await listarTarefasDoCliente(id);
 
-    setTarefas(tarefasData);
-    gerarTimeline(contatosData, tarefasData);
+    setTarefas(tarefasData || []);
+    gerarTimeline(contatosData || [], tarefasData || []);
   }
 
   async function concluir(idTarefa) {
     await concluirTarefa(idTarefa);
+    await carregarCliente();
 
     const contatosData = await listarContatos(id);
     const tarefasData = await listarTarefasDoCliente(id);
 
-    setTarefas(tarefasData);
-    gerarTimeline(contatosData, tarefasData);
+    setTarefas(tarefasData || []);
+    gerarTimeline(contatosData || [], tarefasData || []);
   }
 
   return (
@@ -144,8 +141,7 @@ export default function ClienteDetalhe() {
             <b>Empresa:</b> {cliente.empresa}
           </p>
 
-          {/* TIMELINE */}
-          <h2 style={{ marginBottom: 15 }}>🧠 Histórico do Cliente</h2>
+          <h2 style={{ marginBottom: 15 }}>Historico do cliente</h2>
 
           {timeline.length === 0 ? (
             <Card>
@@ -153,16 +149,13 @@ export default function ClienteDetalhe() {
             </Card>
           ) : (
             timeline.map((item, index) => (
-              <Card key={index}>
-                <b>{item.data}</b> — {item.texto}
+              <Card key={`${item.tipo}-${item.data}-${index}`}>
+                <b>{item.data}</b> - {item.texto}
               </Card>
             ))
           )}
 
-          {/* CONTATO */}
-          <h2 style={{ marginTop: 40, marginBottom: 15 }}>
-            📞 Registrar Contato
-          </h2>
+          <h2 style={{ marginTop: 40, marginBottom: 15 }}>Registrar contato</h2>
 
           <Card>
             <form
@@ -183,7 +176,7 @@ export default function ClienteDetalhe() {
               />
 
               <input
-                placeholder="Observação"
+                placeholder="Observacao"
                 value={obs}
                 onChange={(e) => setObs(e.target.value)}
                 style={{ ...inputStyle, minWidth: "250px" }}
@@ -193,36 +186,27 @@ export default function ClienteDetalhe() {
             </form>
           </Card>
 
-          {/* TAREFAS */}
-          <h2 style={{ marginTop: 40, marginBottom: 15 }}>
-            📅 Tarefas Pendentes
-          </h2>
+          <h2 style={{ marginTop: 40, marginBottom: 15 }}>Tarefas pendentes</h2>
 
           {tarefas.length === 0 ? (
             <Card>
-              <p>Nenhuma tarefa pendente 🎉</p>
+              <p>Nenhuma tarefa pendente.</p>
             </Card>
           ) : (
-            tarefas.map((t) => (
-              <Card key={t.id}>
+            tarefas.map((tarefa) => (
+              <Card key={tarefa.id}>
                 <div style={{ marginBottom: 10 }}>
-                  <b>{t.titulo}</b> ({t.tipo})
+                  <b>{tarefa.titulo}</b> ({tarefa.tipo})
                 </div>
 
-                <div style={{ marginBottom: 15 }}>
-                  Data: {t.data}
-                </div>
+                <div style={{ marginBottom: 15 }}>Data: {tarefa.data}</div>
 
-                <Button onClick={() => concluir(t.id)}>
-                  Concluir
-                </Button>
+                <Button onClick={() => concluir(tarefa.id)}>Concluir</Button>
               </Card>
             ))
           )}
 
-          <h3 style={{ marginTop: 30, marginBottom: 15 }}>
-            ➕ Criar Nova Tarefa
-          </h3>
+          <h3 style={{ marginTop: 30, marginBottom: 15 }}>Criar nova tarefa</h3>
 
           <Card>
             <form
@@ -235,7 +219,7 @@ export default function ClienteDetalhe() {
               }}
             >
               <input
-                placeholder="Título da tarefa"
+                placeholder="Titulo da tarefa"
                 value={tituloTarefa}
                 onChange={(e) => setTituloTarefa(e.target.value)}
                 required
@@ -247,7 +231,7 @@ export default function ClienteDetalhe() {
                 onChange={(e) => setTipoTarefa(e.target.value)}
                 style={inputStyle}
               >
-                <option>Ligação</option>
+                <option>Ligacao</option>
                 <option>Visita</option>
                 <option>Proposta</option>
                 <option>Outro</option>

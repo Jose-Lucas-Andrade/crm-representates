@@ -5,17 +5,25 @@ export default function Bloqueado() {
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
+    let ativo = true;
+
+    async function buscarPerfil() {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .single();
+
+      if (ativo && data) {
+        setProfile(data);
+      }
+    }
+
     buscarPerfil();
+
+    return () => {
+      ativo = false;
+    };
   }, []);
-
-  async function buscarPerfil() {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .single();
-
-    if (data) setProfile(data);
-  }
 
   const dataVencimento =
     profile?.plano === "trial"

@@ -22,13 +22,15 @@ export default function Register() {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
-      password
+      password,
+      options: {
+        data: {
+          nome,
+        },
+      },
     });
-
-    console.log("DATA:", data);
-    console.log("ERROR:", error);
 
     if (error) {
       setMensagem(error.message);
