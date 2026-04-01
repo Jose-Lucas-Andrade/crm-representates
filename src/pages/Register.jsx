@@ -1,18 +1,17 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
 export default function Register() {
-
+  const navigate = useNavigate();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [mensagem, setMensagem] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleRegister(e) {
     e.preventDefault();
-
     setLoading(true);
     setMensagem("");
 
@@ -35,11 +34,13 @@ export default function Register() {
     if (error) {
       setMensagem(error.message);
     } else {
-      setMensagem("Conta criada com sucesso! Faça login.");
-
-      setNome("");
-      setEmail("");
-      setPassword("");
+      navigate("/login", {
+        replace: true,
+        state: {
+          mensagem: "Conta criada com sucesso. Verifique o email cadastrado para validar a conta antes do primeiro login.",
+        },
+      });
+      return;
     }
 
     setLoading(false);
@@ -47,88 +48,105 @@ export default function Register() {
 
   return (
     <div style={container}>
+      <div style={card}>
+        <h1 style={{ marginBottom: 12 }}>Criar conta</h1>
+        <p style={subtitle}>Comece com um periodo de teste e organize seu pipeline comercial.</p>
 
-      <h1 style={{ marginBottom: 10 }}>
-        Criar conta
-      </h1>
+        <form onSubmit={handleRegister} style={form}>
+          <input
+            type="text"
+            placeholder="Seu nome"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            required
+            style={input}
+          />
 
-      <p style={{ marginBottom: 20, color: "#64748b" }}>
-        Comece grátis por 7 dias 🚀
-      </p>
+          <input
+            type="email"
+            placeholder="Seu email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={input}
+          />
 
-      <form onSubmit={handleRegister} style={form}>
+          <input
+            type="password"
+            placeholder="Crie uma senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={input}
+          />
 
-        <input
-          type="text"
-          placeholder="Seu nome"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          required
-          style={input}
-        />
+          <button type="submit" disabled={loading} style={button}>
+            {loading ? "Criando conta..." : "Criar conta"}
+          </button>
+        </form>
 
-        <input
-          type="email"
-          placeholder="Seu email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={input}
-        />
+        {mensagem && <p style={message}>{mensagem}</p>}
 
-        <input
-          type="password"
-          placeholder="Crie uma senha"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={input}
-        />
-
-        <button
-          type="submit"
-          disabled={loading}
-          style={button}
-        >
-          {loading ? "Criando conta..." : "Criar conta"}
-        </button>
-
-      </form>
-
-      {mensagem && (
         <p style={{ marginTop: 20 }}>
-          {mensagem}
+          Ja tem conta?{" "}
+          <Link to="/login" style={{ color: "#2563eb", fontWeight: "bold" }}>
+            Entrar
+          </Link>
         </p>
-      )}
-
+      </div>
     </div>
   );
 }
 
 const container = {
-  padding: 40,
-  maxWidth: 400,
-  margin: "0 auto",
-  textAlign: "center"
+  minHeight: "100vh",
+  padding: 24,
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  background: "#f8fafc",
+};
+
+const card = {
+  width: "100%",
+  maxWidth: 420,
+  background: "#fff",
+  padding: 32,
+  borderRadius: 16,
+  boxShadow: "0 12px 30px rgba(15, 23, 42, 0.08)",
+  textAlign: "center",
+};
+
+const subtitle = {
+  marginBottom: 24,
+  color: "#64748b",
+  fontSize: 14,
 };
 
 const form = {
   display: "flex",
   flexDirection: "column",
-  gap: 15
+  gap: 15,
 };
 
 const input = {
-  padding: "10px",
-  borderRadius: "6px",
-  border: "1px solid #cbd5e1"
+  padding: "12px",
+  borderRadius: "8px",
+  border: "1px solid #cbd5e1",
 };
 
 const button = {
-  padding: "10px",
-  borderRadius: "6px",
+  padding: "12px",
+  borderRadius: "8px",
   border: "none",
   background: "#16a34a",
   color: "#fff",
-  cursor: "pointer"
+  cursor: "pointer",
+  fontWeight: "bold",
+};
+
+const message = {
+  marginTop: 18,
+  color: "#0f172a",
+  fontSize: 14,
 };

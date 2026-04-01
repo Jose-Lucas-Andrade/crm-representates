@@ -1,16 +1,81 @@
-# React + Vite
+# CRM para Representantes
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+CRM web para representantes comerciais com autenticacao via Supabase, gestao de clientes, contatos, tarefas, pipeline de oportunidades e alertas de follow-up.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React 19
+- Vite
+- React Router
+- Supabase
+- Vercel
 
-## React Compiler
+## Funcionalidades
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Cadastro e login com email
+- Controle de acesso por plano
+- Cadastro e edicao de clientes
+- Registro de contatos e historico por cliente
+- Tarefas do dia e tarefas pendentes
+- Pipeline de oportunidades
+- Alertas de follow-up com regra de 15 dias sem contato
 
-## Expanding the ESLint configuration
+## Requisitos
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Node.js 20 ou superior
+- Projeto Supabase configurado
+
+## Variaveis de ambiente
+
+Crie um arquivo `.env` na raiz com base no `.env.example`.
+
+```env
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+```
+
+## Como rodar localmente
+
+```bash
+npm install
+npm run dev
+```
+
+## Scripts
+
+- `npm run dev`: ambiente local
+- `npm run lint`: validacao do codigo
+- `npm run build`: build de producao
+- `npm run preview`: preview local da build
+
+## Banco de dados
+
+O projeto depende de:
+
+- tabelas `profiles`, `clientes`, `tarefas`, `contatos`
+- RLS habilitado
+- funcoes RPC para dashboard e follow-up
+- policies que exigem usuario ativo
+
+Antes de publicar, rode no Supabase:
+
+1. o schema principal do projeto
+2. o patch de seguranca das policies
+3. o ajuste de follow-up para 15 dias
+
+## Checklist de producao
+
+- Confirmar que o `.env` nao esta mais versionado
+- Validar login, logout e cadastro
+- Validar criacao de cliente, contato e tarefa
+- Validar acesso a dashboard, alertas e oportunidades
+- Confirmar que usuarios bloqueados nao conseguem acessar dados via API
+- Confirmar deploy com rewrite para SPA
+
+## Deploy
+
+O projeto contem `vercel.json` com rewrite para `index.html`, entao pode ser publicado na Vercel como SPA.
+
+## Status do repositorio
+
+Se o `.env` ja esteve no Git em algum momento, ele foi removido do versionamento nas alteracoes recentes. O arquivo local continua funcionando normalmente.

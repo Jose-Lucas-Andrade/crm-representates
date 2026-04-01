@@ -1,117 +1,139 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
 export default function Login() {
-
+  const location = useLocation();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mensagem, setMensagem] = useState("");
+  const [mensagem, setMensagem] = useState(() => location.state?.mensagem ?? "");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.mensagem) {
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   async function handleLogin(e) {
     e.preventDefault();
-
     setLoading(true);
     setMensagem("");
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
 
     if (error) {
-      if (error.message.includes("Invalid login credentials")) {
-        setMensagem("Email ou senha inválidos.");
+      if (error.message.includes("Email not confirmed")) {
+        setMensagem("Primeiro acesso: confirme o email cadastrado antes de entrar.");
+      } else if (error.message.includes("Invalid login credentials")) {
+        setMensagem("Email ou senha invalidos.");
       } else {
         setMensagem("Erro ao fazer login. Tente novamente.");
       }
-    } else {
-      setMensagem("Login realizado com sucesso!");
-      // Redirecionamento simples
-      window.location.href = "/";
+
+      setLoading(false);
+      return;
     }
 
-    setLoading(false);
+    navigate("/");
   }
 
   return (
     <div style={container}>
+      <div style={card}>
+        <h1 style={{ marginBottom: 12 }}>Login</h1>
+        <p style={subtitle}>Entre para acessar seus clientes, tarefas e follow-ups.</p>
 
-      <h1 style={{ marginBottom: 20 }}>
-        Login
-      </h1>
+        <form onSubmit={handleLogin} style={form}>
+          <input
+            type="email"
+            placeholder="Seu email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={input}
+          />
 
-      <form onSubmit={handleLogin} style={form}>
+          <input
+            type="password"
+            placeholder="Sua senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={input}
+          />
 
-        <input
-          type="email"
-          placeholder="Seu email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={input}
-        />
+          <button type="submit" disabled={loading} style={button}>
+            {loading ? "Entrando..." : "Entrar"}
+          </button>
+        </form>
 
-        <input
-          type="password"
-          placeholder="Sua senha"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={input}
-        />
+        {mensagem && <p style={message}>{mensagem}</p>}
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={button}
-        >
-          {loading ? "Entrando..." : "Entrar"}
-        </button>
-
-      </form>
-
-      {mensagem && (
         <p style={{ marginTop: 20 }}>
-          {mensagem}
+          Nao tem conta?{" "}
+          <Link to="/register" style={{ color: "#2563eb", fontWeight: "bold" }}>
+            Criar conta
+          </Link>
         </p>
-      )}
-
-      <p style={{ marginTop: 20 }}>
-        Não tem conta?{" "}
-        <a href="/register" style={{ color: "#2563eb" }}>
-          Criar conta
-        </a>
-      </p>
-
+      </div>
     </div>
   );
 }
 
 const container = {
-  padding: 40,
-  maxWidth: 400,
-  margin: "0 auto",
-  textAlign: "center"
+  minHeight: "100vh",
+  padding: 24,
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  background: "#f8fafc",
+};
+
+const card = {
+  width: "100%",
+  maxWidth: 420,
+  background: "#fff",
+  padding: 32,
+  borderRadius: 16,
+  boxShadow: "0 12px 30px rgba(15, 23, 42, 0.08)",
+  textAlign: "center",
+};
+
+const subtitle = {
+  marginBottom: 24,
+  color: "#64748b",
+  fontSize: 14,
 };
 
 const form = {
   display: "flex",
   flexDirection: "column",
-  gap: 15
+  gap: 15,
 };
 
 const input = {
-  padding: "10px",
-  borderRadius: "6px",
-  border: "1px solid #cbd5e1"
+  padding: "12px",
+  borderRadius: "8px",
+  border: "1px solid #cbd5e1",
 };
 
 const button = {
-  padding: "10px",
-  borderRadius: "6px",
+  padding: "12px",
+  borderRadius: "8px",
   border: "none",
   background: "#2563eb",
   color: "#fff",
-  cursor: "pointer"
+  cursor: "pointer",
+  fontWeight: "bold",
+};
+
+const message = {
+  marginTop: 18,
+  color: "#0f172a",
+  fontSize: 14,
 };
