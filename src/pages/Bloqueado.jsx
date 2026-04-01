@@ -8,10 +8,7 @@ export default function Bloqueado() {
     let ativo = true;
 
     async function buscarPerfil() {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .single();
+      const { data } = await supabase.from("profiles").select("*").single();
 
       if (ativo && data) {
         setProfile(data);
@@ -26,57 +23,42 @@ export default function Bloqueado() {
   }, []);
 
   const dataVencimento =
-    profile?.plano === "trial"
-      ? profile?.trial_fim
-      : profile?.proxima_cobranca;
+    profile?.plano === "trial" ? profile?.trial_fim : profile?.proxima_cobranca;
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        
-        <h1 style={styles.title}>🚫 Acesso pausado</h1>
+        <div style={styles.badge}>Acesso pausado</div>
+        <h1 style={styles.title}>Seu acesso precisa de renovacao</h1>
 
         <p style={styles.subtitle}>
-          Seu plano expirou em{" "}
-          <strong>
-            {dataVencimento
-              ? new Date(dataVencimento).toLocaleDateString()
-              : "--"}
-          </strong>
+          {dataVencimento
+            ? `Seu periodo atual venceu em ${new Date(dataVencimento).toLocaleDateString()}.`
+            : "Nao encontramos uma data de renovacao ativa para esta conta."}
         </p>
 
         <div style={styles.alert}>
-          ⚠️ Seu CRM foi pausado, mas seus dados estão seguros.
+          Seus dados continuam seguros. Assim que o plano for regularizado, o acesso volta normalmente.
         </div>
 
-        <hr style={{ margin: "20px 0" }} />
-
-        <h2 style={styles.sectionTitle}>Continue usando o sistema</h2>
-
-        <p style={styles.text}>
-          Volte a organizar seus clientes, tarefas e follow-ups sem perder vendas.
-        </p>
-
         <div style={styles.pixBox}>
-          <p><strong>💳 Pagamento via PIX</strong></p>
-
-          <p><strong>Valor:</strong> R$29,90 / mês</p>
-
-          <p><strong>Chave PIX:</strong></p>
+          <p style={styles.pixTitle}>Pagamento via PIX</p>
+          <p><strong>Valor:</strong> R$ 29,90 / mes</p>
+          <p><strong>Chave:</strong></p>
           <p style={styles.pixKey}>61.273.860/0001-93</p>
         </div>
 
         <p style={styles.textSmall}>
-          Após o pagamento, envie o comprovante para liberação imediata.
+          Apos o pagamento, envie o comprovante para liberar sua conta com mais rapidez.
         </p>
 
         <a
-          href="https://wa.me/5521983631683?text=Olá,%20acabei%20de%20fazer%20o%20pagamento%20do%20CRM%20e%20quero%20liberar%20meu%20acesso"
+          href="https://wa.me/5521983631683?text=Ola,%20acabei%20de%20fazer%20o%20pagamento%20do%20CRM%20e%20quero%20liberar%20meu%20acesso"
           target="_blank"
           rel="noreferrer"
           style={styles.button}
         >
-          📲 Enviar comprovante e liberar acesso
+          Enviar comprovante
         </a>
       </div>
     </div>
@@ -85,76 +67,81 @@ export default function Bloqueado() {
 
 const styles = {
   container: {
-    height: "100vh",
+    minHeight: "100vh",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "#f1f5f9",
+    padding: 24,
+    background:
+      "radial-gradient(circle at top, rgba(239,68,68,0.10), transparent 30%), #f8fafc",
   },
-
   card: {
     background: "#fff",
-    padding: "35px",
-    borderRadius: "14px",
-    width: "380px",
+    padding: "36px",
+    borderRadius: "18px",
+    width: "100%",
+    maxWidth: "460px",
     textAlign: "center",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+    boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
   },
-
+  badge: {
+    display: "inline-block",
+    padding: "6px 12px",
+    borderRadius: "999px",
+    background: "#fee2e2",
+    color: "#b91c1c",
+    fontSize: "12px",
+    fontWeight: "bold",
+    marginBottom: "16px",
+  },
   title: {
     marginBottom: "10px",
   },
-
   subtitle: {
     color: "#64748b",
     fontSize: "14px",
+    lineHeight: 1.5,
   },
-
   alert: {
-    marginTop: "15px",
-    padding: "10px",
-    background: "#fee2e2",
-    borderRadius: "8px",
-    color: "#991b1b",
+    marginTop: "18px",
+    padding: "12px",
+    background: "#fff7ed",
+    borderRadius: "10px",
+    color: "#9a3412",
     fontSize: "14px",
+    border: "1px solid #fed7aa",
   },
-
-  sectionTitle: {
-    marginBottom: "10px",
+  pixBox: {
+    background: "#f8fafc",
+    padding: "16px",
+    borderRadius: "12px",
+    marginTop: "20px",
+    border: "1px solid #e2e8f0",
   },
-
-  text: {
-    fontSize: "14px",
-    color: "#475569",
+  pixTitle: {
+    marginTop: 0,
+    fontWeight: "bold",
+    color: "#0f172a",
   },
-
+  pixKey: {
+    fontWeight: "bold",
+    fontSize: "16px",
+    letterSpacing: "0.04em",
+  },
   textSmall: {
     fontSize: "13px",
     color: "#64748b",
-    marginTop: "10px",
+    marginTop: "14px",
+    lineHeight: 1.5,
   },
-
-  pixBox: {
-    background: "#f8fafc",
-    padding: "15px",
-    borderRadius: "10px",
-    marginTop: "15px",
-    border: "1px solid #e2e8f0",
-  },
-
-  pixKey: {
-    fontWeight: "bold",
-    fontSize: "15px",
-  },
-
   button: {
     display: "block",
-    marginTop: "20px",
-    padding: "12px",
+    marginTop: "22px",
+    padding: "14px",
     background: "#16a34a",
     color: "#fff",
     textDecoration: "none",
-    borderRadius: "8px",
+    borderRadius: "10px",
     fontWeight: "bold",
   },
 };

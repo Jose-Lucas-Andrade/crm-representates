@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { criarCliente } from "../services/clientes";
 import {
+  CLIENTE_CLASSIFICACAO,
+  CLIENTE_CLASSIFICACAO_OPTIONS,
   CLIENTE_STATUS,
   CLIENTE_STATUS_OPTIONS,
 } from "../constants/clientes";
@@ -15,6 +17,7 @@ export default function NovoCliente() {
   const [email, setEmail] = useState("");
   const [cidade, setCidade] = useState("");
   const [status, setStatus] = useState(CLIENTE_STATUS.PROSPECT);
+  const [classificacao, setClassificacao] = useState(CLIENTE_CLASSIFICACAO.MORNO);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -26,6 +29,7 @@ export default function NovoCliente() {
       email,
       cidade,
       status,
+      classificacao,
     });
 
     if (ok) {
@@ -109,6 +113,30 @@ export default function NovoCliente() {
             </div>
           </div>
 
+          <div style={styles.row}>
+            <div style={styles.field}>
+              <label>Classificacao</label>
+              <select
+                style={styles.input}
+                value={classificacao}
+                onChange={(e) => setClassificacao(e.target.value)}
+              >
+                {CLIENTE_CLASSIFICACAO_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={styles.field}>
+              <label>Resumo</label>
+              <div style={styles.helperBox}>
+                Defina o status comercial e a temperatura do relacionamento.
+              </div>
+            </div>
+          </div>
+
           <div style={styles.actions}>
             <button type="submit" style={styles.button}>
               Salvar cliente
@@ -162,6 +190,15 @@ const styles = {
     borderRadius: "8px",
     border: "1px solid #cbd5e1",
     fontSize: "14px",
+  },
+  helperBox: {
+    minHeight: "44px",
+    padding: "10px 12px",
+    borderRadius: "8px",
+    background: "#eff6ff",
+    color: "#1d4ed8",
+    fontSize: "13px",
+    border: "1px solid #bfdbfe",
   },
   actions: {
     marginTop: "10px",

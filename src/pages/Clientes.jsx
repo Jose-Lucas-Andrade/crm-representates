@@ -5,6 +5,7 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import {
   CLIENTE_STATUS_OPTIONS,
+  getClienteClassificacaoLabel,
   getClienteStatusLabel,
 } from "../constants/clientes";
 
@@ -49,7 +50,14 @@ export default function Clientes() {
 
   return (
     <>
-      <h1 style={{ marginBottom: "25px" }}>Clientes</h1>
+      <div style={styles.header}>
+        <div>
+          <h1 style={{ marginBottom: 6 }}>Clientes</h1>
+          <p style={styles.subtitle}>
+            Acompanhe sua carteira, filtre prioridades e avance negociacoes com mais clareza.
+          </p>
+        </div>
+      </div>
 
       <Card>
         <div
@@ -112,6 +120,11 @@ export default function Clientes() {
                 Status: <b>{getClienteStatusLabel(cliente.status)}</b>
               </div>
 
+              <div style={{ marginBottom: 18 }}>
+                Classificacao:{" "}
+                <b>{getClienteClassificacaoLabel(cliente.classificacao)}</b>
+              </div>
+
               <div style={{ display: "flex", gap: 10 }}>
                 <Link to={`/clientes/${cliente.id}`}>
                   <Button variant="secondary">Ver</Button>
@@ -132,3 +145,17 @@ export default function Clientes() {
     </>
   );
 }
+
+const styles = {
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 25,
+  },
+  subtitle: {
+    margin: 0,
+    color: "#64748b",
+    maxWidth: 620,
+  },
+};

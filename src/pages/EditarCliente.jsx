@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { atualizarCliente, listarClientes } from "../services/clientes";
 import {
+  CLIENTE_CLASSIFICACAO,
+  CLIENTE_CLASSIFICACAO_OPTIONS,
   CLIENTE_STATUS,
   CLIENTE_STATUS_OPTIONS,
 } from "../constants/clientes";
@@ -89,6 +91,23 @@ export default function EditarCliente() {
               onChange={(e) => setForm({ ...form, status: e.target.value })}
             >
               {CLIENTE_STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.group}>
+            <label>Classificacao</label>
+            <select
+              style={styles.select}
+              value={form.classificacao || CLIENTE_CLASSIFICACAO.MORNO}
+              onChange={(e) =>
+                setForm({ ...form, classificacao: e.target.value })
+              }
+            >
+              {CLIENTE_CLASSIFICACAO_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>

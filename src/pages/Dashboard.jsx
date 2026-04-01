@@ -54,7 +54,14 @@ export default function Dashboard() {
         <p>Carregando dashboard...</p>
       ) : (
         <>
-          <h1 style={{ marginBottom: "25px" }}>Dashboard</h1>
+          <div style={styles.hero}>
+            <div>
+              <h1 style={{ marginBottom: 6 }}>Dashboard</h1>
+              <p style={styles.heroText}>
+                Veja rapidamente oportunidades ativas, follow-ups pendentes e a carga de trabalho do dia.
+              </p>
+            </div>
+          </div>
 
           <div
             style={{
@@ -115,3 +122,20 @@ export default function Dashboard() {
     </>
   );
 }
+
+const styles = {
+  hero: {
+    marginBottom: 25,
+    padding: "22px 24px",
+    borderRadius: "18px",
+    background:
+      "linear-gradient(135deg, rgba(37,99,235,0.10), rgba(14,165,233,0.08))",
+    border: "1px solid rgba(59,130,246,0.16)",
+  },
+  heroText: {
+    margin: 0,
+    color: "#475569",
+    maxWidth: 700,
+    lineHeight: 1.5,
+  },
+};

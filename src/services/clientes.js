@@ -1,5 +1,8 @@
 import { supabase } from "../supabaseClient";
-import { CLIENTE_STATUS } from "../constants/clientes";
+import {
+  CLIENTE_CLASSIFICACAO,
+  CLIENTE_STATUS,
+} from "../constants/clientes";
 
 export async function listarClientes() {
   const { data, error } = await supabase
@@ -35,6 +38,8 @@ export async function criarCliente(cliente) {
       email: cliente.email,
       cidade: cliente.cidade,
       status: cliente.status || CLIENTE_STATUS.PROSPECT,
+      classificacao:
+        cliente.classificacao || CLIENTE_CLASSIFICACAO.MORNO,
     },
   ]);
 
@@ -48,9 +53,15 @@ export async function criarCliente(cliente) {
 }
 
 export async function atualizarCliente(id, cliente) {
+  const payload = {
+    ...cliente,
+    classificacao:
+      cliente.classificacao || CLIENTE_CLASSIFICACAO.MORNO,
+  };
+
   const { error } = await supabase
     .from("clientes")
-    .update(cliente)
+    .update(payload)
     .eq("id", id);
 
   if (error) {
