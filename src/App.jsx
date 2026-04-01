@@ -28,6 +28,7 @@ export default function App() {
             {/* Rotas públicas */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/bloqueado" element={<Bloqueado />} />
 
             {/* Rotas protegidas */}
             <Route
@@ -46,7 +47,6 @@ export default function App() {
               <Route path="/oportunidades" element={<Opportunities />} />
               <Route path="/alertas" element={<DiasSemContato />} />
               <Route path="/tarefas" element={<Tarefas />} />
-              <Route path="/bloqueado" element={<Bloqueado />} />
             </Route>
 
           </Routes>
