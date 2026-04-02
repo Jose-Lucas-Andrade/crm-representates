@@ -8,6 +8,11 @@ export async function criarTarefa(tarefa) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    console.error("Erro ao criar tarefa: usuário não autenticado");
+    return { ok: false, error: "Usuário não autenticado." };
+  }
+
   const { error } = await supabase.from("tarefas").insert([
     {
       user_id: user.id,
@@ -15,15 +20,16 @@ export async function criarTarefa(tarefa) {
       titulo: tarefa.titulo,
       tipo: tarefa.tipo,
       data: tarefa.data,
+      prioridade: "MEDIA",
     },
   ]);
 
   if (error) {
     console.error("Erro ao criar tarefa:", error.message);
-    return false;
+    return { ok: false, error: error.message };
   }
 
-  return true;
+  return { ok: true, error: null };
 }
 
 /* ===============================
@@ -38,6 +44,38 @@ export async function listarTarefasDoDia() {
   }
 
   return data || [];
+}
+
+/* ===============================
+   TAREFAS PENDENTES GERAIS
+================================ */
+export async function listarTarefasPendentes() {
+  const [{ data: tarefas, error: tarefasError }, { data: clientes, error: clientesError }] =
+    await Promise.all([
+      supabase
+        .from("tarefas")
+        .select("id, titulo, tipo, data, cliente_id, concluida")
+        .eq("concluida", false)
+        .order("data", { ascending: true }),
+      supabase.from("clientes").select("id, nome"),
+    ]);
+
+  if (tarefasError) {
+    console.error("Erro ao listar tarefas pendentes:", tarefasError.message);
+    return [];
+  }
+
+  if (clientesError) {
+    console.error("Erro ao buscar clientes das tarefas:", clientesError.message);
+    return [];
+  }
+
+  const clientesMap = new Map((clientes || []).map((cliente) => [cliente.id, cliente.nome]));
+
+  return (tarefas || []).map((tarefa) => ({
+    ...tarefa,
+    cliente_nome: clientesMap.get(tarefa.cliente_id) || "Cliente não encontrado",
+  }));
 }
 
 /* ===============================

@@ -60,7 +60,7 @@ export default function Opportunities() {
 
           <Coluna
             id={CLIENTE_STATUS.NEGOCIACAO}
-            titulo="Negociacao"
+            titulo="Negociação"
             clientes={negociacao}
             onMover={mover}
           />

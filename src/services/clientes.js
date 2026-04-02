@@ -40,6 +40,8 @@ export async function criarCliente(cliente) {
       status: cliente.status || CLIENTE_STATUS.PROSPECT,
       classificacao:
         cliente.classificacao || CLIENTE_CLASSIFICACAO.MORNO,
+      proxima_acao: cliente.proxima_acao || null,
+      proxima_visita: cliente.proxima_visita || null,
     },
   ]);
 

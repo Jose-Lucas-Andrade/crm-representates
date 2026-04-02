@@ -29,27 +29,33 @@ export default function Bloqueado() {
     <div style={styles.container}>
       <div style={styles.card}>
         <div style={styles.badge}>Acesso pausado</div>
-        <h1 style={styles.title}>Seu acesso precisa de renovacao</h1>
+        <h1 style={styles.title}>Seu acesso precisa de renovação</h1>
 
         <p style={styles.subtitle}>
           {dataVencimento
-            ? `Seu periodo atual venceu em ${new Date(dataVencimento).toLocaleDateString()}.`
-            : "Nao encontramos uma data de renovacao ativa para esta conta."}
+            ? `Seu período atual venceu em ${new Date(dataVencimento).toLocaleDateString("pt-BR")}.`
+            : "Não encontramos uma data de renovação ativa para esta conta."}
         </p>
 
         <div style={styles.alert}>
-          Seus dados continuam seguros. Assim que o plano for regularizado, o acesso volta normalmente.
+          Seus dados continuam seguros. Assim que o plano for regularizado, o
+          acesso volta normalmente.
         </div>
 
         <div style={styles.pixBox}>
           <p style={styles.pixTitle}>Pagamento via PIX</p>
-          <p><strong>Valor:</strong> R$ 29,90 / mes</p>
-          <p><strong>Chave:</strong></p>
+          <p>
+            <strong>Valor:</strong> R$ 29,90 / mês
+          </p>
+          <p>
+            <strong>Chave:</strong>
+          </p>
           <p style={styles.pixKey}>61.273.860/0001-93</p>
         </div>
 
         <p style={styles.textSmall}>
-          Apos o pagamento, envie o comprovante para liberar sua conta com mais rapidez.
+          Após o pagamento, envie o comprovante para liberar sua conta com mais
+          rapidez.
         </p>
 
         <a
@@ -110,6 +116,7 @@ const styles = {
     color: "#9a3412",
     fontSize: "14px",
     border: "1px solid #fed7aa",
+    lineHeight: 1.5,
   },
   pixBox: {
     background: "#f8fafc",

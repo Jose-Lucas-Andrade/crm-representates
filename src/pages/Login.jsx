@@ -30,7 +30,7 @@ export default function Login() {
       if (error.message.includes("Email not confirmed")) {
         setMensagem("Primeiro acesso: confirme o email cadastrado antes de entrar.");
       } else if (error.message.includes("Invalid login credentials")) {
-        setMensagem("Email ou senha invalidos.");
+        setMensagem("Email ou senha inválidos.");
       } else {
         setMensagem("Erro ao fazer login. Tente novamente.");
       }
@@ -75,7 +75,7 @@ export default function Login() {
         {mensagem && <p style={message}>{mensagem}</p>}
 
         <p style={{ marginTop: 20 }}>
-          Nao tem conta?{" "}
+          Não tem conta?{" "}
           <Link to="/register" style={{ color: "#2563eb", fontWeight: "bold" }}>
             Criar conta
           </Link>

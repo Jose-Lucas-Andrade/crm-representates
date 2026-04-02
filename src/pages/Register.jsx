@@ -50,7 +50,7 @@ export default function Register() {
     <div style={container}>
       <div style={card}>
         <h1 style={{ marginBottom: 12 }}>Criar conta</h1>
-        <p style={subtitle}>Comece com um periodo de teste e organize seu pipeline comercial.</p>
+        <p style={subtitle}>Comece com um período de teste e organize seu pipeline comercial.</p>
 
         <form onSubmit={handleRegister} style={form}>
           <input
@@ -88,7 +88,7 @@ export default function Register() {
         {mensagem && <p style={message}>{mensagem}</p>}
 
         <p style={{ marginTop: 20 }}>
-          Ja tem conta?{" "}
+          Já tem conta?{" "}
           <Link to="/login" style={{ color: "#2563eb", fontWeight: "bold" }}>
             Entrar
           </Link>
