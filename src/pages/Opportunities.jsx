@@ -86,6 +86,11 @@ export default function Opportunities() {
         </div>
       )}
 
+      <div style={styles.infoBox}>
+        Clientes com status <b>Inativo</b> saem deste quadro e continuam visíveis na
+        carteira de clientes.
+      </div>
+
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div
           style={{
@@ -188,6 +193,16 @@ const styles = {
     color: "#4338ca",
     fontSize: "14px",
     lineHeight: 1.5,
+  },
+  infoBox: {
+    marginBottom: 20,
+    padding: "12px 14px",
+    borderRadius: "12px",
+    background: "#fff7ed",
+    color: "#9a3412",
+    fontSize: "14px",
+    lineHeight: 1.5,
+    border: "1px solid #fed7aa",
   },
   board: {
     display: "grid",
