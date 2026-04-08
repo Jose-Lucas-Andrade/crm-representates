@@ -1,8 +1,5 @@
 import { supabase } from "../supabaseClient";
 
-// ===============================
-// LISTAR CONTATOS DE UM CLIENTE
-// ===============================
 export async function listarContatos(cliente_id) {
   const { data, error } = await supabase
     .from("contatos")
@@ -18,9 +15,6 @@ export async function listarContatos(cliente_id) {
   return data;
 }
 
-// ===============================
-// CRIAR CONTATO
-// ===============================
 export async function criarContato(dados) {
   const { error } = await supabase.from("contatos").insert([
     {
@@ -32,7 +26,7 @@ export async function criarContato(dados) {
 
   if (error) {
     console.error("Erro ao registrar contato:", error.message);
-    alert("Erro ao registrar contato: " + error.message);
+    alert(`Erro ao registrar contato: ${error.message}`);
     return false;
   }
 

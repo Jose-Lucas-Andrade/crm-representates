@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import {
-  CLIENTE_CLASSIFICACAO,
   CLIENTE_CLASSIFICACAO_OPTIONS,
-  CLIENTE_STATUS,
   CLIENTE_STATUS_OPTIONS,
   getClienteClassificacaoLabel,
   getClienteStatusLabel,
@@ -27,13 +25,35 @@ function formatarData(data) {
   return new Date(`${data}T00:00:00`).toLocaleDateString("pt-BR");
 }
 
-const fieldInputStyle = {
-  padding: "11px 12px",
-  borderRadius: "10px",
-  border: "1px solid #cbd5e1",
-  width: "100%",
-  background: "#fff",
-};
+function formatarDataHora(data) {
+  if (!data) {
+    return "Sem registro";
+  }
+
+  return new Date(data).toLocaleString("pt-BR");
+}
+
+function montarTimeline(contatos, tarefas) {
+  const timelineContatos = (contatos || []).map((contato) => ({
+    id: `contato-${contato.id}`,
+    tipo: "Contato",
+    titulo: contato.observacao || "Contato registrado",
+    referencia: contato.data_contato,
+    criadoEm: contato.created_at,
+  }));
+
+  const timelineTarefas = (tarefas || []).map((tarefa) => ({
+    id: `tarefa-${tarefa.id}`,
+    tipo: "Tarefa",
+    titulo: `${tarefa.titulo} (${tarefa.tipo})`,
+    referencia: tarefa.data,
+    criadoEm: tarefa.created_at,
+  }));
+
+  return [...timelineContatos, ...timelineTarefas].sort(
+    (a, b) => new Date(b.criadoEm) - new Date(a.criadoEm)
+  );
+}
 
 export default function ClienteDetalhe() {
   const { id } = useParams();
@@ -46,83 +66,80 @@ export default function ClienteDetalhe() {
   const [tipoTarefa, setTipoTarefa] = useState("Ligação");
   const [dataTarefa, setDataTarefa] = useState("");
   const [resumoRapido, setResumoRapido] = useState({
-    status: CLIENTE_STATUS.PROSPECT,
-    classificacao: CLIENTE_CLASSIFICACAO.MORNO,
+    status: "",
+    classificacao: "",
     proxima_acao: "",
     proxima_visita: "",
   });
 
   async function carregarCliente() {
-    const { data } = await supabase.from("clientes").select("*").eq("id", id).single();
-    setCliente(data);
+    const { data, error } = await supabase
+      .from("clientes")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
 
-    if (data) {
-      setResumoRapido({
-        status: data.status || CLIENTE_STATUS.PROSPECT,
-        classificacao: data.classificacao || CLIENTE_CLASSIFICACAO.MORNO,
-        proxima_acao: data.proxima_acao || "",
-        proxima_visita: data.proxima_visita || "",
-      });
+    if (error) {
+      console.error("Erro ao carregar cliente:", error.message);
+      return null;
     }
-  }
 
-  function gerarTimeline(contatosData, tarefasData) {
-    const contatosTimeline = contatosData.map((contato) => ({
-      tipo: "contato",
-      data: contato.data_contato,
-      texto: `Contato: ${contato.observacao || "Sem observação"}`,
-    }));
+    setCliente(data);
+    setResumoRapido({
+      status: data?.status || "",
+      classificacao: data?.classificacao || "",
+      proxima_acao: data?.proxima_acao || "",
+      proxima_visita: data?.proxima_visita || "",
+    });
 
-    const tarefasTimeline = tarefasData.map((tarefa) => ({
-      tipo: "tarefa",
-      data: tarefa.data,
-      texto: `Tarefa: ${tarefa.titulo} (${tarefa.tipo})`,
-    }));
-
-    const combinado = [...contatosTimeline, ...tarefasTimeline];
-    combinado.sort((a, b) => new Date(b.data) - new Date(a.data));
-    setTimeline(combinado);
+    return data;
   }
 
   useEffect(() => {
     let ativo = true;
 
-    async function carregarTudo() {
-      const { data } = await supabase.from("clientes").select("*").eq("id", id).single();
-      const contatosData = await listarContatos(id);
-      const tarefasData = await listarTarefasDoCliente(id);
+    async function carregar() {
+      const [{ data: clienteData, error }, contatos, tarefasData] =
+        await Promise.all([
+          supabase.from("clientes").select("*").eq("id", id).maybeSingle(),
+          listarContatos(id),
+          listarTarefasDoCliente(id),
+        ]);
+
+      if (error) {
+        console.error("Erro ao carregar cliente:", error.message);
+        return;
+      }
 
       if (!ativo) {
         return;
       }
 
-      setCliente(data);
+      setCliente(clienteData);
+      setResumoRapido({
+        status: clienteData?.status || "",
+        classificacao: clienteData?.classificacao || "",
+        proxima_acao: clienteData?.proxima_acao || "",
+        proxima_visita: clienteData?.proxima_visita || "",
+      });
       setTarefas(tarefasData || []);
-      gerarTimeline(contatosData || [], tarefasData || []);
-
-      if (data) {
-        setResumoRapido({
-          status: data.status || CLIENTE_STATUS.PROSPECT,
-          classificacao: data.classificacao || CLIENTE_CLASSIFICACAO.MORNO,
-          proxima_acao: data.proxima_acao || "",
-          proxima_visita: data.proxima_visita || "",
-        });
-      }
+      setTimeline(montarTimeline(contatos || [], tarefasData || []));
     }
 
-    carregarTudo();
+    carregar();
 
     return () => {
       ativo = false;
     };
   }, [id]);
 
-  async function salvarResumoRapido(e) {
-    e.preventDefault();
+  async function salvarResumoRapido(event) {
+    event.preventDefault();
 
     const ok = await atualizarCliente(id, {
-      ...cliente,
-      ...resumoRapido,
+      status: resumoRapido.status,
+      classificacao: resumoRapido.classificacao,
+      proxima_acao: resumoRapido.proxima_acao || null,
       proxima_visita: resumoRapido.proxima_visita || null,
     });
 
@@ -133,28 +150,32 @@ export default function ClienteDetalhe() {
     await carregarCliente();
   }
 
-  async function registrarContato(e) {
-    e.preventDefault();
+  async function registrarContato(event) {
+    event.preventDefault();
 
-    await criarContato({
+    const ok = await criarContato({
       cliente_id: id,
       data_contato: dataContato,
       observacao: obs,
     });
 
+    if (!ok) {
+      return;
+    }
+
     setDataContato("");
     setObs("");
-    await carregarCliente();
-
-    const contatosData = await listarContatos(id);
-    const tarefasData = await listarTarefasDoCliente(id);
+    const [contatos, tarefasData] = await Promise.all([
+      listarContatos(id),
+      listarTarefasDoCliente(id),
+    ]);
 
     setTarefas(tarefasData || []);
-    gerarTimeline(contatosData || [], tarefasData || []);
+    setTimeline(montarTimeline(contatos || [], tarefasData || []));
   }
 
-  async function registrarTarefa(e) {
-    e.preventDefault();
+  async function registrarTarefa(event) {
+    event.preventDefault();
 
     const resultado = await criarTarefa({
       cliente_id: id,
@@ -171,91 +192,86 @@ export default function ClienteDetalhe() {
     setTituloTarefa("");
     setTipoTarefa("Ligação");
     setDataTarefa("");
-    await carregarCliente();
-
-    const contatosData = await listarContatos(id);
-    const tarefasData = await listarTarefasDoCliente(id);
+    const [contatos, tarefasData] = await Promise.all([
+      listarContatos(id),
+      listarTarefasDoCliente(id),
+    ]);
 
     setTarefas(tarefasData || []);
-    gerarTimeline(contatosData || [], tarefasData || []);
+    setTimeline(montarTimeline(contatos || [], tarefasData || []));
   }
 
   async function concluir(idTarefa) {
-    await concluirTarefa(idTarefa);
-    await carregarCliente();
+    const ok = await concluirTarefa(idTarefa);
+    if (!ok) {
+      return;
+    }
 
-    const contatosData = await listarContatos(id);
-    const tarefasData = await listarTarefasDoCliente(id);
+    const [contatos, tarefasData] = await Promise.all([
+      listarContatos(id),
+      listarTarefasDoCliente(id),
+    ]);
 
     setTarefas(tarefasData || []);
-    gerarTimeline(contatosData || [], tarefasData || []);
+    setTimeline(montarTimeline(contatos || [], tarefasData || []));
   }
 
   if (!cliente) {
-    return <p>Carregando cliente...</p>;
+    return <div>Carregando cliente...</div>;
   }
 
   return (
     <div style={styles.page}>
       <section style={styles.hero}>
         <div>
-          <h1 style={styles.heroTitle}>{cliente.nome}</h1>
-          <p style={styles.heroText}>
-            Atualize a situação comercial sem sair da conversa e mantenha o
-            relacionamento sob controle.
+          <Link to="/clientes" style={styles.backLink}>
+            Voltar para clientes
+          </Link>
+          <h1 style={styles.title}>{cliente.nome}</h1>
+          <p style={styles.subtitle}>
+            Centralize o histórico, ajuste o status da negociação e mantenha o
+            próximo passo sempre atualizado.
           </p>
         </div>
       </section>
 
       <section style={styles.summaryGrid}>
-        <Card>
-          <p style={styles.summaryItem}>
-            <b>Empresa:</b> {cliente.empresa || "Não informada"}
-          </p>
-          <p style={styles.summaryItem}>
-            <b>Status atual:</b> {getClienteStatusLabel(cliente.status)}
-          </p>
-        </Card>
-
-        <Card>
-          <p style={styles.summaryItem}>
-            <b>Classificação atual:</b>{" "}
-            {getClienteClassificacaoLabel(cliente.classificacao)}
-          </p>
-          <p style={styles.summaryItem}>
-            <b>Último contato:</b> {formatarData(cliente.ultimo_contato)}
-          </p>
-        </Card>
-
-        <Card>
-          <p style={styles.summaryItem}>
-            <b>Próxima ação atual:</b> {cliente.proxima_acao || "Não definida"}
-          </p>
-          <p style={styles.summaryItem}>
-            <b>Próxima visita atual:</b> {formatarData(cliente.proxima_visita)}
-          </p>
-        </Card>
+        <Card title="Status" value={getClienteStatusLabel(cliente.status)} />
+        <Card
+          title="Classificação"
+          value={getClienteClassificacaoLabel(cliente.classificacao)}
+        />
+        <Card title="Próxima ação" value={cliente.proxima_acao || "Não definida"} />
+        <Card
+          title="Próxima visita"
+          value={
+            cliente.proxima_visita
+              ? formatarData(cliente.proxima_visita)
+              : "Não definida"
+          }
+        />
       </section>
 
-      <section style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Atualização rápida do cliente</h2>
-          <p style={styles.sectionText}>
-            Ajuste status, classificação e próximo passo sem precisar abrir a tela
-            de edição completa.
-          </p>
-        </div>
-
+      <section>
         <Card>
-          <form onSubmit={salvarResumoRapido} style={styles.quickForm}>
-            <div style={styles.formField}>
-              <label>Status</label>
+          <h2 style={styles.sectionTitle}>Atualização rápida</h2>
+          <p style={styles.sectionText}>
+            Ajuste os pontos mais importantes da negociação sem sair da ficha do
+            cliente.
+          </p>
+
+          <form onSubmit={salvarResumoRapido} style={styles.formGrid}>
+            <label style={styles.field}>
+              <span>Status</span>
               <select
                 value={resumoRapido.status}
-                onChange={(e) =>
-                  setResumoRapido({ ...resumoRapido, status: e.target.value })
+                onChange={(event) =>
+                  setResumoRapido((atual) => ({
+                    ...atual,
+                    status: event.target.value,
+                  }))
                 }
-                style={fieldInputStyle}
+                style={styles.input}
               >
                 {CLIENTE_STATUS_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -263,19 +279,19 @@ export default function ClienteDetalhe() {
                   </option>
                 ))}
               </select>
-            </div>
+            </label>
 
-            <div style={styles.formField}>
-              <label>Classificação</label>
+            <label style={styles.field}>
+              <span>Classificação</span>
               <select
                 value={resumoRapido.classificacao}
-                onChange={(e) =>
-                  setResumoRapido({
-                    ...resumoRapido,
-                    classificacao: e.target.value,
-                  })
+                onChange={(event) =>
+                  setResumoRapido((atual) => ({
+                    ...atual,
+                    classificacao: event.target.value,
+                  }))
                 }
-                style={fieldInputStyle}
+                style={styles.input}
               >
                 {CLIENTE_CLASSIFICACAO_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -283,154 +299,167 @@ export default function ClienteDetalhe() {
                   </option>
                 ))}
               </select>
-            </div>
+            </label>
 
-            <div style={styles.formFieldFull}>
-              <label>Próxima ação</label>
+            <label style={styles.field}>
+              <span>Próxima ação</span>
               <input
+                type="text"
                 value={resumoRapido.proxima_acao}
-                onChange={(e) =>
-                  setResumoRapido({
-                    ...resumoRapido,
-                    proxima_acao: e.target.value,
-                  })
+                onChange={(event) =>
+                  setResumoRapido((atual) => ({
+                    ...atual,
+                    proxima_acao: event.target.value,
+                  }))
                 }
-                placeholder="Ex.: confirmar pedido, visitar ou enviar proposta"
-                style={fieldInputStyle}
+                style={styles.input}
+                placeholder="Ex.: ligar para confirmar proposta"
               />
-            </div>
+            </label>
 
-            <div style={styles.formField}>
-              <label>Próxima visita</label>
+            <label style={styles.field}>
+              <span>Próxima visita</span>
               <input
                 type="date"
                 value={resumoRapido.proxima_visita}
-                onChange={(e) =>
-                  setResumoRapido({
-                    ...resumoRapido,
-                    proxima_visita: e.target.value,
-                  })
+                onChange={(event) =>
+                  setResumoRapido((atual) => ({
+                    ...atual,
+                    proxima_visita: event.target.value,
+                  }))
                 }
-                style={fieldInputStyle}
+                style={styles.input}
               />
-            </div>
+            </label>
 
-            <div style={styles.formFieldAction}>
-              <Button type="submit">Salvar atualização rápida</Button>
+            <div style={styles.formActions}>
+              <Button type="submit">Salvar atualização</Button>
             </div>
           </form>
         </Card>
       </section>
 
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>Histórico do cliente</h2>
-
-        {timeline.length === 0 ? (
-          <Card>
-            <p>Nenhuma atividade registrada.</p>
-          </Card>
-        ) : (
-          <div style={styles.stack}>
-            {timeline.map((item, index) => (
-              <Card key={`${item.tipo}-${item.data}-${index}`}>
-                <b>{formatarData(item.data)}</b>
-                <p style={styles.timelineText}>{item.texto}</p>
-              </Card>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section style={styles.sectionGrid}>
-        <div>
+      <section style={styles.twoCols}>
+        <Card>
           <h2 style={styles.sectionTitle}>Registrar contato</h2>
-          <Card>
-            <form onSubmit={registrarContato} style={styles.formStack}>
+          <form onSubmit={registrarContato} style={styles.formStack}>
+            <label style={styles.field}>
+              <span>Data do contato</span>
               <input
                 type="date"
                 value={dataContato}
-                onChange={(e) => setDataContato(e.target.value)}
+                onChange={(event) => setDataContato(event.target.value)}
+                style={styles.input}
                 required
-                style={fieldInputStyle}
               />
+            </label>
 
-              <input
-                placeholder="Observação"
+            <label style={styles.field}>
+              <span>Observação</span>
+              <textarea
                 value={obs}
-                onChange={(e) => setObs(e.target.value)}
-                style={fieldInputStyle}
+                onChange={(event) => setObs(event.target.value)}
+                style={styles.textarea}
+                placeholder="Registre o que foi conversado"
               />
+            </label>
 
-              <div>
-                <Button type="submit">Salvar contato</Button>
-              </div>
-            </form>
-          </Card>
-        </div>
+            <Button type="submit">Salvar contato</Button>
+          </form>
+        </Card>
 
-        <div>
-          <h2 style={styles.sectionTitle}>Criar nova tarefa</h2>
-          <Card>
-            <form onSubmit={registrarTarefa} style={styles.formStack}>
+        <Card>
+          <h2 style={styles.sectionTitle}>Criar tarefa</h2>
+          <form onSubmit={registrarTarefa} style={styles.formStack}>
+            <label style={styles.field}>
+              <span>Título</span>
               <input
-                placeholder="Título da tarefa"
+                type="text"
                 value={tituloTarefa}
-                onChange={(e) => setTituloTarefa(e.target.value)}
+                onChange={(event) => setTituloTarefa(event.target.value)}
+                style={styles.input}
+                placeholder="Ex.: enviar proposta"
                 required
-                style={fieldInputStyle}
               />
+            </label>
 
+            <label style={styles.field}>
+              <span>Tipo</span>
               <select
                 value={tipoTarefa}
-                onChange={(e) => setTipoTarefa(e.target.value)}
-                style={fieldInputStyle}
+                onChange={(event) => setTipoTarefa(event.target.value)}
+                style={styles.input}
               >
-                <option>Ligação</option>
-                <option>Visita</option>
-                <option>Proposta</option>
-                <option>Outro</option>
+                <option value="Ligação">Ligação</option>
+                <option value="Visita">Visita</option>
+                <option value="Mensagem">Mensagem</option>
+                <option value="Proposta">Proposta</option>
               </select>
+            </label>
 
+            <label style={styles.field}>
+              <span>Data</span>
               <input
                 type="date"
                 value={dataTarefa}
-                onChange={(e) => setDataTarefa(e.target.value)}
+                onChange={(event) => setDataTarefa(event.target.value)}
+                style={styles.input}
                 required
-                style={fieldInputStyle}
               />
+            </label>
 
-              <div>
-                <Button type="submit">Criar tarefa</Button>
-              </div>
-            </form>
-          </Card>
-        </div>
+            <Button type="submit">Criar tarefa</Button>
+          </form>
+        </Card>
       </section>
 
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>Tarefas pendentes</h2>
-
-        {tarefas.length === 0 ? (
-          <Card>
-            <p>Nenhuma tarefa pendente.</p>
-          </Card>
-        ) : (
-          <div style={styles.stack}>
-            {tarefas.map((tarefa) => (
-              <Card key={tarefa.id}>
-                <div style={styles.taskHeader}>
+      <section style={styles.twoCols}>
+        <Card>
+          <h2 style={styles.sectionTitle}>Tarefas em aberto</h2>
+          {tarefas.length === 0 ? (
+            <p style={styles.emptyText}>Nenhuma tarefa pendente para este cliente.</p>
+          ) : (
+            <div style={styles.stack}>
+              {tarefas.map((tarefa) => (
+                <div key={tarefa.id} style={styles.listItem}>
                   <div>
-                    <b>{tarefa.titulo}</b>
-                    <p style={styles.timelineText}>{tarefa.tipo}</p>
+                    <strong>{tarefa.titulo}</strong>
+                    <p style={styles.itemText}>
+                      {tarefa.tipo} • {formatarData(tarefa.data)}
+                    </p>
                   </div>
-                  <span style={styles.taskDate}>{formatarData(tarefa.data)}</span>
+                  <Button onClick={() => concluir(tarefa.id)}>Concluir</Button>
                 </div>
+              ))}
+            </div>
+          )}
+        </Card>
 
-                <Button onClick={() => concluir(tarefa.id)}>Concluir</Button>
-              </Card>
-            ))}
-          </div>
-        )}
+        <Card>
+          <h2 style={styles.sectionTitle}>Linha do tempo</h2>
+          {timeline.length === 0 ? (
+            <p style={styles.emptyText}>Ainda não há histórico registrado.</p>
+          ) : (
+            <div style={styles.stack}>
+              {timeline.map((item) => (
+                <div key={item.id} style={styles.timelineItem}>
+                  <div style={styles.timelineHeader}>
+                    <strong>{item.tipo}</strong>
+                    <span style={styles.timelineDate}>
+                      {item.referencia
+                        ? formatarData(item.referencia)
+                        : formatarDataHora(item.criadoEm)}
+                    </span>
+                  </div>
+                  <p style={styles.itemText}>{item.titulo}</p>
+                  <small style={styles.createdLine}>
+                    Registrado em {formatarDataHora(item.criadoEm)}
+                  </small>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
       </section>
     </div>
   );
@@ -438,106 +467,133 @@ export default function ClienteDetalhe() {
 
 const styles = {
   page: {
-    width: "100%",
-    maxWidth: "1160px",
-    margin: "0 auto",
+    display: "flex",
+    flexDirection: "column",
+    gap: 24,
   },
   hero: {
-    marginBottom: 24,
-    padding: "26px",
-    borderRadius: "20px",
+    padding: 24,
+    borderRadius: 20,
+    border: "1px solid rgba(14,165,233,0.16)",
     background:
-      "linear-gradient(135deg, rgba(251,191,36,0.14), rgba(59,130,246,0.08))",
-    border: "1px solid rgba(245,158,11,0.2)",
+      "linear-gradient(135deg, rgba(14,165,233,0.10), rgba(16,185,129,0.08))",
   },
-  heroTitle: {
+  backLink: {
+    display: "inline-flex",
+    marginBottom: 12,
+    fontWeight: 700,
+    textDecoration: "none",
+  },
+  title: {
     margin: "0 0 8px",
   },
-  heroText: {
+  subtitle: {
     margin: 0,
     color: "#475569",
     lineHeight: 1.6,
-    maxWidth: 720,
+    maxWidth: 760,
   },
   summaryGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
     gap: 16,
-    marginBottom: 30,
-  },
-  summaryItem: {
-    margin: "0 0 10px",
-    color: "#334155",
-    lineHeight: 1.6,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-    gap: 24,
-    marginBottom: 32,
-  },
-  sectionHeader: {
-    marginBottom: 16,
   },
   sectionTitle: {
     margin: "0 0 8px",
   },
   sectionText: {
-    margin: 0,
+    margin: "0 0 18px",
     color: "#64748b",
     lineHeight: 1.6,
   },
-  stack: {
-    display: "grid",
-    gap: 14,
-  },
-  timelineText: {
-    margin: "8px 0 0",
-    color: "#475569",
-    lineHeight: 1.6,
-  },
-  quickForm: {
+  formGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: 16,
-    alignItems: "end",
-  },
-  formField: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 6,
-  },
-  formFieldFull: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 6,
-    gridColumn: "1 / -1",
-  },
-  formFieldAction: {
-    display: "flex",
-    alignItems: "flex-end",
+    gap: 14,
   },
   formStack: {
     display: "grid",
     gap: 14,
   },
-  taskHeader: {
+  field: {
+    display: "grid",
+    gap: 8,
+    color: "#334155",
+    fontWeight: 600,
+  },
+  input: {
+    width: "100%",
+    padding: "12px 14px",
+    borderRadius: 12,
+    border: "1px solid #cbd5e1",
+    background: "#fff",
+  },
+  textarea: {
+    width: "100%",
+    minHeight: 110,
+    padding: "12px 14px",
+    borderRadius: 12,
+    border: "1px solid #cbd5e1",
+    background: "#fff",
+    resize: "vertical",
+    fontFamily: "inherit",
+  },
+  formActions: {
+    display: "flex",
+    alignItems: "flex-end",
+  },
+  twoCols: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gap: 20,
+  },
+  stack: {
+    display: "grid",
+    gap: 12,
+  },
+  listItem: {
     display: "flex",
     justifyContent: "space-between",
-    gap: 14,
+    alignItems: "center",
+    gap: 12,
     flexWrap: "wrap",
-    alignItems: "flex-start",
-    marginBottom: 12,
+    padding: "12px 14px",
+    borderRadius: 12,
+    border: "1px solid #e2e8f0",
+    background: "#f8fafc",
   },
-  taskDate: {
-    padding: "6px 10px",
-    borderRadius: "999px",
-    background: "#e2e8f0",
-    color: "#334155",
-    fontSize: "12px",
-    fontWeight: "bold",
+  timelineItem: {
+    padding: "12px 14px",
+    borderRadius: 12,
+    border: "1px solid #e2e8f0",
+    background: "#f8fafc",
+  },
+  timelineHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    alignItems: "center",
+    flexWrap: "wrap",
+    marginBottom: 8,
+  },
+  timelineDate: {
+    color: "#64748b",
+    fontSize: 13,
+    fontWeight: 600,
+  },
+  itemText: {
+    margin: "4px 0 0",
+    color: "#475569",
+    lineHeight: 1.6,
+  },
+  createdLine: {
+    display: "block",
+    marginTop: 8,
+    color: "#64748b",
+  },
+  emptyText: {
+    margin: 0,
+    color: "#64748b",
+    lineHeight: 1.6,
   },
 };

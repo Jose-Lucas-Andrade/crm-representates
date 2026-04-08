@@ -9,6 +9,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [mensagem, setMensagem] = useState(() => location.state?.mensagem ?? "");
   const [loading, setLoading] = useState(false);
+  const [mostrarAvisoPrimeiroAcesso, setMostrarAvisoPrimeiroAcesso] =
+    useState(true);
 
   useEffect(() => {
     if (location.state?.mensagem) {
@@ -16,8 +18,8 @@ export default function Login() {
     }
   }, [location.pathname, location.state, navigate]);
 
-  async function handleLogin(e) {
-    e.preventDefault();
+  async function handleLogin(event) {
+    event.preventDefault();
     setLoading(true);
     setMensagem("");
 
@@ -48,12 +50,29 @@ export default function Login() {
         <h1 style={{ marginBottom: 12 }}>Login</h1>
         <p style={subtitle}>Entre para acessar seus clientes, tarefas e follow-ups.</p>
 
+        {mostrarAvisoPrimeiroAcesso ? (
+          <div style={noticeBox}>
+            <strong>Primeiro acesso?</strong>
+            <p style={noticeText}>
+              Antes de entrar pela primeira vez, valide o email cadastrado no
+              link enviado para a sua caixa de entrada.
+            </p>
+            <button
+              type="button"
+              onClick={() => setMostrarAvisoPrimeiroAcesso(false)}
+              style={noticeClose}
+            >
+              Entendi
+            </button>
+          </div>
+        ) : null}
+
         <form onSubmit={handleLogin} style={form}>
           <input
             type="email"
             placeholder="Seu email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(event) => setEmail(event.target.value)}
             required
             style={input}
           />
@@ -62,7 +81,7 @@ export default function Login() {
             type="password"
             placeholder="Sua senha"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(event) => setPassword(event.target.value)}
             required
             style={input}
           />
@@ -136,4 +155,30 @@ const message = {
   marginTop: 18,
   color: "#0f172a",
   fontSize: 14,
+};
+
+const noticeBox = {
+  marginBottom: 20,
+  padding: "14px",
+  borderRadius: 12,
+  background: "#eff6ff",
+  border: "1px solid #bfdbfe",
+  textAlign: "left",
+};
+
+const noticeText = {
+  margin: "8px 0 12px",
+  color: "#334155",
+  fontSize: 14,
+  lineHeight: 1.6,
+};
+
+const noticeClose = {
+  padding: "8px 12px",
+  borderRadius: 8,
+  border: "1px solid #cbd5e1",
+  background: "#fff",
+  color: "#0f172a",
+  cursor: "pointer",
+  fontWeight: "bold",
 };

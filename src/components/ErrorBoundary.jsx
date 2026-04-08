@@ -18,7 +18,7 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div style={{ padding: "40px", fontFamily: "Arial" }}>
-          <h2>❌ Ocorreu um erro no sistema</h2>
+          <h2>Ocorreu um erro no sistema</h2>
           <p>Veja o console (F12) para mais detalhes.</p>
           <pre>{this.state.error?.toString()}</pre>
         </div>

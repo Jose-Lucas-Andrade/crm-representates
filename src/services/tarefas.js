@@ -1,8 +1,5 @@
 import { supabase } from "../supabaseClient";
 
-/* ===============================
-   CRIAR TAREFA
-================================ */
 export async function criarTarefa(tarefa) {
   const {
     data: { user },
@@ -32,9 +29,6 @@ export async function criarTarefa(tarefa) {
   return { ok: true, error: null };
 }
 
-/* ===============================
-   TAREFAS DO DIA (DASHBOARD)
-================================ */
 export async function listarTarefasDoDia() {
   const { data, error } = await supabase.rpc("tarefas_do_dia");
 
@@ -46,19 +40,18 @@ export async function listarTarefasDoDia() {
   return data || [];
 }
 
-/* ===============================
-   TAREFAS PENDENTES GERAIS
-================================ */
 export async function listarTarefasPendentes() {
-  const [{ data: tarefas, error: tarefasError }, { data: clientes, error: clientesError }] =
-    await Promise.all([
-      supabase
-        .from("tarefas")
-        .select("id, titulo, tipo, data, cliente_id, concluida")
-        .eq("concluida", false)
-        .order("data", { ascending: true }),
-      supabase.from("clientes").select("id, nome"),
-    ]);
+  const [
+    { data: tarefas, error: tarefasError },
+    { data: clientes, error: clientesError },
+  ] = await Promise.all([
+    supabase
+      .from("tarefas")
+      .select("id, titulo, tipo, data, cliente_id, concluida")
+      .eq("concluida", false)
+      .order("data", { ascending: true }),
+    supabase.from("clientes").select("id, nome"),
+  ]);
 
   if (tarefasError) {
     console.error("Erro ao listar tarefas pendentes:", tarefasError.message);
@@ -70,7 +63,9 @@ export async function listarTarefasPendentes() {
     return [];
   }
 
-  const clientesMap = new Map((clientes || []).map((cliente) => [cliente.id, cliente.nome]));
+  const clientesMap = new Map(
+    (clientes || []).map((cliente) => [cliente.id, cliente.nome])
+  );
 
   return (tarefas || []).map((tarefa) => ({
     ...tarefa,
@@ -78,9 +73,6 @@ export async function listarTarefasPendentes() {
   }));
 }
 
-/* ===============================
-   TAREFAS DO CLIENTE
-================================ */
 export async function listarTarefasDoCliente(cliente_id) {
   const { data, error } = await supabase
     .from("tarefas")
@@ -97,9 +89,6 @@ export async function listarTarefasDoCliente(cliente_id) {
   return data || [];
 }
 
-/* ===============================
-   CONCLUIR TAREFA
-================================ */
 export async function concluirTarefa(id) {
   const { error } = await supabase
     .from("tarefas")

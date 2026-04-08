@@ -10,8 +10,8 @@ export default function Register() {
   const [mensagem, setMensagem] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleRegister(e) {
-    e.preventDefault();
+  async function handleRegister(event) {
+    event.preventDefault();
     setLoading(true);
     setMensagem("");
 
@@ -37,7 +37,8 @@ export default function Register() {
       navigate("/login", {
         replace: true,
         state: {
-          mensagem: "Conta criada com sucesso. Verifique o email cadastrado para validar a conta antes do primeiro login.",
+          mensagem:
+            "Conta criada com sucesso. Verifique o email cadastrado para validar a conta antes do primeiro login.",
         },
       });
       return;
@@ -50,14 +51,16 @@ export default function Register() {
     <div style={container}>
       <div style={card}>
         <h1 style={{ marginBottom: 12 }}>Criar conta</h1>
-        <p style={subtitle}>Comece com um período de teste e organize seu pipeline comercial.</p>
+        <p style={subtitle}>
+          Comece com um período de teste e organize seu pipeline comercial.
+        </p>
 
         <form onSubmit={handleRegister} style={form}>
           <input
             type="text"
             placeholder="Seu nome"
             value={nome}
-            onChange={(e) => setNome(e.target.value)}
+            onChange={(event) => setNome(event.target.value)}
             required
             style={input}
           />
@@ -66,7 +69,7 @@ export default function Register() {
             type="email"
             placeholder="Seu email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(event) => setEmail(event.target.value)}
             required
             style={input}
           />
@@ -75,7 +78,7 @@ export default function Register() {
             type="password"
             placeholder="Crie uma senha"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(event) => setPassword(event.target.value)}
             required
             style={input}
           />

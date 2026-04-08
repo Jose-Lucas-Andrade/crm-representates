@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
 import {
-  CLIENTE_CLASSIFICACAO,
   CLIENTE_CLASSIFICACAO_OPTIONS,
-  CLIENTE_STATUS,
   CLIENTE_STATUS_OPTIONS,
 } from "../constants/clientes";
 import { atualizarCliente, listarClientes } from "../services/clientes";
@@ -11,215 +11,250 @@ import { atualizarCliente, listarClientes } from "../services/clientes";
 export default function EditarCliente() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [form, setForm] = useState(null);
+  const [form, setForm] = useState({
+    nome: "",
+    empresa: "",
+    email: "",
+    telefone: "",
+    cidade: "",
+    status: "",
+    classificacao: "",
+    proxima_acao: "",
+    proxima_visita: "",
+  });
 
   useEffect(() => {
+    let ativo = true;
+
     async function carregar() {
-      const lista = await listarClientes();
-      const cliente = lista.find((item) => item.id === id);
-      setForm(cliente ?? null);
+      const clientes = await listarClientes();
+      const cliente = (clientes || []).find((item) => item.id === id);
+
+      if (!ativo || !cliente) {
+        return;
+      }
+
+      setForm({
+        nome: cliente.nome || "",
+        empresa: cliente.empresa || "",
+        email: cliente.email || "",
+        telefone: cliente.telefone || "",
+        cidade: cliente.cidade || "",
+        status: cliente.status || "",
+        classificacao: cliente.classificacao || "",
+        proxima_acao: cliente.proxima_acao || "",
+        proxima_visita: cliente.proxima_visita || "",
+      });
     }
 
     carregar();
+
+    return () => {
+      ativo = false;
+    };
   }, [id]);
 
-  async function salvar(e) {
-    e.preventDefault();
-    await atualizarCliente(id, form);
-    navigate("/clientes");
+  function atualizarCampo(campo, valor) {
+    setForm((atual) => ({ ...atual, [campo]: valor }));
   }
 
-  if (!form) {
-    return <p style={styles.loading}>Carregando...</p>;
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    const ok = await atualizarCliente(id, {
+      ...form,
+      proxima_acao: form.proxima_acao || null,
+      proxima_visita: form.proxima_visita || null,
+    });
+
+    if (!ok) {
+      return;
+    }
+
+    navigate(`/clientes/${id}`);
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
+    <div style={styles.page}>
+      <section style={styles.hero}>
+        <Link to={`/clientes/${id}`} style={styles.backLink}>
+          Voltar para o cliente
+        </Link>
         <h1 style={styles.title}>Editar cliente</h1>
         <p style={styles.subtitle}>
-          Atualize os dados mais importantes para manter a carteira organizada e
-          o próximo passo bem definido.
+          Atualize os dados cadastrais e mantenha o contexto comercial sempre
+          alinhado com a carteira.
         </p>
+      </section>
 
-        <form onSubmit={salvar} style={styles.form}>
-          <div style={styles.row}>
-            <div style={styles.group}>
-              <label>Nome</label>
-              <input
-                style={styles.input}
-                value={form.nome || ""}
-                onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                required
-              />
-            </div>
+      <Card>
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <label style={styles.field}>
+            <span>Nome</span>
+            <input
+              type="text"
+              value={form.nome}
+              onChange={(event) => atualizarCampo("nome", event.target.value)}
+              style={styles.input}
+              required
+            />
+          </label>
 
-            <div style={styles.group}>
-              <label>Empresa</label>
-              <input
-                style={styles.input}
-                value={form.empresa || ""}
-                onChange={(e) => setForm({ ...form, empresa: e.target.value })}
-              />
-            </div>
+          <label style={styles.field}>
+            <span>Empresa</span>
+            <input
+              type="text"
+              value={form.empresa}
+              onChange={(event) => atualizarCampo("empresa", event.target.value)}
+              style={styles.input}
+            />
+          </label>
+
+          <label style={styles.field}>
+            <span>Email</span>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(event) => atualizarCampo("email", event.target.value)}
+              style={styles.input}
+            />
+          </label>
+
+          <label style={styles.field}>
+            <span>Telefone</span>
+            <input
+              type="tel"
+              value={form.telefone}
+              onChange={(event) => atualizarCampo("telefone", event.target.value)}
+              style={styles.input}
+            />
+          </label>
+
+          <label style={styles.field}>
+            <span>Cidade</span>
+            <input
+              type="text"
+              value={form.cidade}
+              onChange={(event) => atualizarCampo("cidade", event.target.value)}
+              style={styles.input}
+            />
+          </label>
+
+          <label style={styles.field}>
+            <span>Status</span>
+            <select
+              value={form.status}
+              onChange={(event) => atualizarCampo("status", event.target.value)}
+              style={styles.input}
+            >
+              {CLIENTE_STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label style={styles.field}>
+            <span>Classificação</span>
+            <select
+              value={form.classificacao}
+              onChange={(event) =>
+                atualizarCampo("classificacao", event.target.value)
+              }
+              style={styles.input}
+            >
+              {CLIENTE_CLASSIFICACAO_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label style={styles.field}>
+            <span>Próxima ação</span>
+            <input
+              type="text"
+              value={form.proxima_acao}
+              onChange={(event) =>
+                atualizarCampo("proxima_acao", event.target.value)
+              }
+              style={styles.input}
+            />
+          </label>
+
+          <label style={styles.field}>
+            <span>Próxima visita</span>
+            <input
+              type="date"
+              value={form.proxima_visita}
+              onChange={(event) =>
+                atualizarCampo("proxima_visita", event.target.value)
+              }
+              style={styles.input}
+            />
+          </label>
+
+          <div style={styles.actions}>
+            <Button type="submit">Salvar alterações</Button>
           </div>
-
-          <div style={styles.row}>
-            <div style={styles.group}>
-              <label>Email</label>
-              <input
-                style={styles.input}
-                value={form.email || ""}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-              />
-            </div>
-
-            <div style={styles.group}>
-              <label>Telefone</label>
-              <input
-                style={styles.input}
-                value={form.telefone || ""}
-                onChange={(e) => setForm({ ...form, telefone: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div style={styles.row}>
-            <div style={styles.group}>
-              <label>Cidade</label>
-              <input
-                style={styles.input}
-                value={form.cidade || ""}
-                onChange={(e) => setForm({ ...form, cidade: e.target.value })}
-              />
-            </div>
-
-            <div style={styles.group}>
-              <label>Status</label>
-              <select
-                style={styles.select}
-                value={form.status || CLIENTE_STATUS.PROSPECT}
-                onChange={(e) => setForm({ ...form, status: e.target.value })}
-              >
-                {CLIENTE_STATUS_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div style={styles.row}>
-            <div style={styles.group}>
-              <label>Classificação</label>
-              <select
-                style={styles.select}
-                value={form.classificacao || CLIENTE_CLASSIFICACAO.MORNO}
-                onChange={(e) =>
-                  setForm({ ...form, classificacao: e.target.value })
-                }
-              >
-                {CLIENTE_CLASSIFICACAO_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div style={styles.group}>
-              <label>Próxima ação</label>
-              <input
-                style={styles.input}
-                value={form.proxima_acao || ""}
-                onChange={(e) =>
-                  setForm({ ...form, proxima_acao: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
-          <div style={styles.row}>
-            <div style={styles.group}>
-              <label>Próxima visita</label>
-              <input
-                type="date"
-                style={styles.input}
-                value={form.proxima_visita || ""}
-                onChange={(e) =>
-                  setForm({ ...form, proxima_visita: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
-          <button type="submit" style={styles.button}>
-            Salvar alterações
-          </button>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
 
 const styles = {
-  container: {
+  page: {
     display: "flex",
-    justifyContent: "center",
+    flexDirection: "column",
+    gap: 24,
   },
-  card: {
-    width: "100%",
-    maxWidth: "760px",
-    background: "#fff",
-    padding: "30px",
-    borderRadius: "16px",
-    boxShadow: "0 12px 30px rgba(15,23,42,0.08)",
+  hero: {
+    padding: 24,
+    borderRadius: 20,
+    border: "1px solid rgba(14,165,233,0.16)",
+    background:
+      "linear-gradient(135deg, rgba(14,165,233,0.10), rgba(37,99,235,0.06))",
+  },
+  backLink: {
+    display: "inline-flex",
+    marginBottom: 12,
+    textDecoration: "none",
+    fontWeight: 700,
   },
   title: {
-    marginBottom: "6px",
+    margin: "0 0 8px",
   },
   subtitle: {
-    marginBottom: "24px",
-    color: "#64748b",
+    margin: 0,
+    color: "#475569",
     lineHeight: 1.6,
+    maxWidth: 760,
   },
   form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
-  },
-  row: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: "15px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: 14,
   },
-  group: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
+  field: {
+    display: "grid",
+    gap: 8,
+    color: "#334155",
+    fontWeight: 600,
   },
   input: {
-    padding: "11px 12px",
-    borderRadius: "10px",
+    width: "100%",
+    padding: "12px 14px",
+    borderRadius: 12,
     border: "1px solid #cbd5e1",
+    background: "#fff",
   },
-  select: {
-    padding: "11px 12px",
-    borderRadius: "10px",
-    border: "1px solid #cbd5e1",
-  },
-  button: {
-    marginTop: "10px",
-    padding: "13px",
-    background: "#2563eb",
-    color: "#fff",
-    border: "none",
-    borderRadius: "10px",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-  loading: {
-    padding: "20px",
+  actions: {
+    gridColumn: "1 / -1",
+    display: "flex",
+    justifyContent: "flex-start",
+    marginTop: 6,
   },
 };

@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
 import {
   CLIENTE_CLASSIFICACAO,
   CLIENTE_CLASSIFICACAO_OPTIONS,
@@ -10,238 +12,220 @@ import { criarCliente } from "../services/clientes";
 
 export default function NovoCliente() {
   const navigate = useNavigate();
+  const [form, setForm] = useState({
+    nome: "",
+    empresa: "",
+    email: "",
+    telefone: "",
+    cidade: "",
+    status: CLIENTE_STATUS.PROSPECT,
+    classificacao: CLIENTE_CLASSIFICACAO.MORNO,
+    proxima_acao: "",
+    proxima_visita: "",
+  });
 
-  const [nome, setNome] = useState("");
-  const [empresa, setEmpresa] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [email, setEmail] = useState("");
-  const [cidade, setCidade] = useState("");
-  const [status, setStatus] = useState(CLIENTE_STATUS.PROSPECT);
-  const [classificacao, setClassificacao] = useState(CLIENTE_CLASSIFICACAO.MORNO);
-  const [proximaAcao, setProximaAcao] = useState("");
-  const [proximaVisita, setProximaVisita] = useState("");
-
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmit(event) {
+    event.preventDefault();
 
     const ok = await criarCliente({
-      nome,
-      empresa,
-      telefone,
-      email,
-      cidade,
-      status,
-      classificacao,
-      proxima_acao: proximaAcao,
-      proxima_visita: proximaVisita || null,
+      ...form,
+      proxima_acao: form.proxima_acao || null,
+      proxima_visita: form.proxima_visita || null,
     });
 
-    if (ok) {
-      navigate("/clientes");
+    if (!ok) {
+      return;
     }
+
+    navigate("/clientes");
+  }
+
+  function atualizarCampo(campo, valor) {
+    setForm((atual) => ({ ...atual, [campo]: valor }));
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
+    <div style={styles.page}>
+      <section style={styles.hero}>
+        <Link to="/clientes" style={styles.backLink}>
+          Voltar para clientes
+        </Link>
         <h1 style={styles.title}>Novo cliente</h1>
         <p style={styles.subtitle}>
-          Cadastre o cliente com contexto comercial suficiente para facilitar o
-          próximo contato.
+          Cadastre o cliente já com status, classificação e próximo passo para a
+          carteira começar organizada.
         </p>
+      </section>
 
+      <Card>
         <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.row}>
-            <div style={styles.field}>
-              <label>Nome *</label>
-              <input
-                style={styles.input}
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                required
-              />
-            </div>
+          <label style={styles.field}>
+            <span>Nome</span>
+            <input
+              type="text"
+              value={form.nome}
+              onChange={(event) => atualizarCampo("nome", event.target.value)}
+              style={styles.input}
+              required
+            />
+          </label>
 
-            <div style={styles.field}>
-              <label>Empresa</label>
-              <input
-                style={styles.input}
-                value={empresa}
-                onChange={(e) => setEmpresa(e.target.value)}
-              />
-            </div>
-          </div>
+          <label style={styles.field}>
+            <span>Empresa</span>
+            <input
+              type="text"
+              value={form.empresa}
+              onChange={(event) => atualizarCampo("empresa", event.target.value)}
+              style={styles.input}
+            />
+          </label>
 
-          <div style={styles.row}>
-            <div style={styles.field}>
-              <label>Telefone</label>
-              <input
-                style={styles.input}
-                value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
-              />
-            </div>
+          <label style={styles.field}>
+            <span>Email</span>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(event) => atualizarCampo("email", event.target.value)}
+              style={styles.input}
+            />
+          </label>
 
-            <div style={styles.field}>
-              <label>Email</label>
-              <input
-                style={styles.input}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-          </div>
+          <label style={styles.field}>
+            <span>Telefone</span>
+            <input
+              type="tel"
+              value={form.telefone}
+              onChange={(event) => atualizarCampo("telefone", event.target.value)}
+              style={styles.input}
+            />
+          </label>
 
-          <div style={styles.row}>
-            <div style={styles.field}>
-              <label>Cidade</label>
-              <input
-                style={styles.input}
-                value={cidade}
-                onChange={(e) => setCidade(e.target.value)}
-              />
-            </div>
+          <label style={styles.field}>
+            <span>Cidade</span>
+            <input
+              type="text"
+              value={form.cidade}
+              onChange={(event) => atualizarCampo("cidade", event.target.value)}
+              style={styles.input}
+            />
+          </label>
 
-            <div style={styles.field}>
-              <label>Status</label>
-              <select
-                style={styles.input}
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                {CLIENTE_STATUS_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <label style={styles.field}>
+            <span>Status</span>
+            <select
+              value={form.status}
+              onChange={(event) => atualizarCampo("status", event.target.value)}
+              style={styles.input}
+            >
+              {CLIENTE_STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
-          <div style={styles.row}>
-            <div style={styles.field}>
-              <label>Classificação</label>
-              <select
-                style={styles.input}
-                value={classificacao}
-                onChange={(e) => setClassificacao(e.target.value)}
-              >
-                {CLIENTE_CLASSIFICACAO_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <label style={styles.field}>
+            <span>Classificação</span>
+            <select
+              value={form.classificacao}
+              onChange={(event) =>
+                atualizarCampo("classificacao", event.target.value)
+              }
+              style={styles.input}
+            >
+              {CLIENTE_CLASSIFICACAO_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
-            <div style={styles.field}>
-              <label>Resumo comercial</label>
-              <div style={styles.helperBox}>
-                Defina o status da negociação e a temperatura do relacionamento
-                para priorizar melhor sua carteira.
-              </div>
-            </div>
-          </div>
+          <label style={styles.field}>
+            <span>Próxima ação</span>
+            <input
+              type="text"
+              value={form.proxima_acao}
+              onChange={(event) =>
+                atualizarCampo("proxima_acao", event.target.value)
+              }
+              style={styles.input}
+              placeholder="Ex.: ligar para apresentar a proposta"
+            />
+          </label>
 
-          <div style={styles.row}>
-            <div style={styles.field}>
-              <label>Próxima ação</label>
-              <input
-                style={styles.input}
-                value={proximaAcao}
-                onChange={(e) => setProximaAcao(e.target.value)}
-                placeholder="Ex.: enviar proposta ou ligar novamente"
-              />
-            </div>
-
-            <div style={styles.field}>
-              <label>Próxima visita</label>
-              <input
-                type="date"
-                style={styles.input}
-                value={proximaVisita}
-                onChange={(e) => setProximaVisita(e.target.value)}
-              />
-            </div>
-          </div>
+          <label style={styles.field}>
+            <span>Próxima visita</span>
+            <input
+              type="date"
+              value={form.proxima_visita}
+              onChange={(event) =>
+                atualizarCampo("proxima_visita", event.target.value)
+              }
+              style={styles.input}
+            />
+          </label>
 
           <div style={styles.actions}>
-            <button type="submit" style={styles.button}>
-              Salvar cliente
-            </button>
+            <Button type="submit">Salvar cliente</Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
 
 const styles = {
-  container: {
+  page: {
     display: "flex",
-    justifyContent: "center",
+    flexDirection: "column",
+    gap: 24,
   },
-  card: {
-    width: "100%",
-    maxWidth: "760px",
-    background: "#fff",
-    padding: "30px",
-    borderRadius: "16px",
-    boxShadow: "0 12px 30px rgba(15,23,42,0.08)",
+  hero: {
+    padding: 24,
+    borderRadius: 20,
+    border: "1px solid rgba(37,99,235,0.16)",
+    background:
+      "linear-gradient(135deg, rgba(37,99,235,0.10), rgba(16,185,129,0.08))",
+  },
+  backLink: {
+    display: "inline-flex",
+    marginBottom: 12,
+    textDecoration: "none",
+    fontWeight: 700,
   },
   title: {
-    marginBottom: "6px",
+    margin: "0 0 8px",
   },
   subtitle: {
-    marginBottom: "25px",
-    color: "#64748b",
-    fontSize: "14px",
+    margin: 0,
+    color: "#475569",
     lineHeight: 1.6,
-    maxWidth: "62ch",
+    maxWidth: 760,
   },
   form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-  },
-  row: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: "15px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: 14,
   },
   field: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-    fontSize: "14px",
+    display: "grid",
+    gap: 8,
+    color: "#334155",
+    fontWeight: 600,
   },
   input: {
-    padding: "11px 12px",
-    borderRadius: "10px",
+    width: "100%",
+    padding: "12px 14px",
+    borderRadius: 12,
     border: "1px solid #cbd5e1",
-    fontSize: "14px",
-  },
-  helperBox: {
-    minHeight: "48px",
-    padding: "10px 12px",
-    borderRadius: "10px",
-    background: "#eff6ff",
-    color: "#1d4ed8",
-    fontSize: "13px",
-    border: "1px solid #bfdbfe",
-    lineHeight: 1.5,
+    background: "#fff",
   },
   actions: {
-    marginTop: "10px",
-  },
-  button: {
-    width: "100%",
-    padding: "13px",
-    background: "#2563eb",
-    color: "#fff",
-    border: "none",
-    borderRadius: "10px",
-    cursor: "pointer",
-    fontWeight: "bold",
+    gridColumn: "1 / -1",
+    display: "flex",
+    justifyContent: "flex-start",
+    marginTop: 6,
   },
 };

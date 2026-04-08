@@ -1,15 +1,15 @@
-import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import Card from "../components/ui/Card";
+import { CLIENTE_CLASSIFICACAO } from "../constants/clientes";
+import { listarClientes } from "../services/clientes";
 import {
   contatosHoje,
   obterResumo,
   tarefasPendentes,
   tarefasVencidas,
 } from "../services/dashboard";
-import { listarClientes } from "../services/clientes";
 import { listarClientesSemContato } from "../services/followup";
-import { CLIENTE_CLASSIFICACAO } from "../constants/clientes";
 
 export default function Dashboard() {
   const [resumo, setResumo] = useState(null);
@@ -23,14 +23,14 @@ export default function Dashboard() {
   useEffect(() => {
     let ativo = true;
 
-    async function carregarDados() {
+    async function carregar() {
       const [
         resumoData,
-        contatosHojeTotal,
-        tarefasPendentesTotal,
-        tarefasVencidasTotal,
-        listaFollowup,
-        clientes,
+        contatosData,
+        pendentesData,
+        vencidasData,
+        followupData,
+        clientesData,
       ] = await Promise.all([
         obterResumo(),
         contatosHoje(),
@@ -44,153 +44,176 @@ export default function Dashboard() {
         return;
       }
 
-      const listaClientes = clientes || [];
+      const clientes = clientesData || [];
 
       setResumo(resumoData);
-      setContatos(contatosHojeTotal);
-      setPendentes(tarefasPendentesTotal);
-      setVencidas(tarefasVencidasTotal);
-      setFollowups((listaFollowup || []).slice(0, 4));
+      setContatos(contatosData || 0);
+      setPendentes(pendentesData || 0);
+      setVencidas(vencidasData || 0);
+      setFollowups((followupData || []).slice(0, 4));
       setClientesQuentes(
-        listaClientes
-          .filter((cliente) => cliente.classificacao === CLIENTE_CLASSIFICACAO.QUENTE)
+        clientes
+          .filter(
+            (cliente) =>
+              cliente.classificacao === CLIENTE_CLASSIFICACAO.QUENTE
+          )
           .slice(0, 4)
       );
       setClientesSemAcao(
-        listaClientes
-          .filter((cliente) => !cliente.proxima_acao)
-          .slice(0, 4)
+        clientes.filter((cliente) => !cliente.proxima_acao).slice(0, 4)
       );
     }
 
-    carregarDados();
+    carregar();
 
     return () => {
       ativo = false;
     };
   }, []);
 
-  if (!resumo) {
-    return <p>Carregando dashboard...</p>;
-  }
+  const followupCritico = followups.length;
+  const quentes = clientesQuentes.length;
+  const semAcao = clientesSemAcao.length;
 
   return (
     <div style={styles.page}>
       <section style={styles.hero}>
         <div>
-          <h1 style={styles.heroTitle}>Dashboard</h1>
-          <p style={styles.heroText}>
-            Uma visão geral da operação comercial para entender o momento da carteira
-            e identificar os principais pontos de atenção.
+          <div style={styles.eyebrow}>Visão geral</div>
+          <h1 style={styles.title}>Dashboard</h1>
+          <p style={styles.subtitle}>
+            Entenda rapidamente a saúde da carteira, os gargalos do momento e
+            os principais riscos comerciais antes de partir para a execução.
           </p>
         </div>
-        <Link to="/hoje" style={styles.heroLink}>
+
+        <Link to="/hoje" style={styles.heroAction}>
           Ir para Hoje
         </Link>
       </section>
 
       <section style={styles.statsGrid}>
-        <Card title="Prospects" value={resumo.prospects} />
-        <Card title="Negociação" value={resumo.negociacao} />
-        <Card title="Clientes" value={resumo.clientes} />
-        <Card title="Inativos" value={resumo.inativos} />
+        <Card title="Prospects" value={resumo?.prospects ?? 0} />
+        <Card title="Negociação" value={resumo?.negociacao ?? 0} />
+        <Card title="Clientes" value={resumo?.clientes ?? 0} />
+        <Card title="Inativos" value={resumo?.inativos ?? 0} />
         <Card title="Contatos hoje" value={contatos} />
         <Card title="Tarefas pendentes" value={pendentes} />
         <Card title="Tarefas vencidas" value={vencidas} />
       </section>
 
-      <section style={styles.gridTwoColumns}>
-        <div>
-          <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Saúde da carteira</h2>
-            <p style={styles.sectionText}>
-              Sinais rápidos de onde a carteira está pedindo atenção.
+      <section style={styles.sectionGrid}>
+        <Card>
+          <h3 style={styles.sectionTitle}>Saúde da carteira</h3>
+          <div style={styles.metricList}>
+            <div style={styles.metricRow}>
+              <span>Follow-up crítico</span>
+              <strong>{followupCritico}</strong>
+            </div>
+            <div style={styles.metricRow}>
+              <span>Sem próxima ação</span>
+              <strong>{semAcao}</strong>
+            </div>
+            <div style={styles.metricRow}>
+              <span>Quentes em destaque</span>
+              <strong>{quentes}</strong>
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <h3 style={styles.sectionTitle}>Resumo do momento</h3>
+          <div style={styles.summaryBlock}>
+            <p style={styles.summaryLine}>
+              Você tem <strong>{pendentes}</strong> tarefa(s) pendente(s) e{" "}
+              <strong>{vencidas}</strong> vencida(s).
+            </p>
+            <p style={styles.summaryLine}>
+              Hoje já foram registrados <strong>{contatos}</strong> contato(s).
+            </p>
+            <p style={styles.summaryHint}>
+              Use a tela <strong>Hoje</strong> para agir e a tela{" "}
+              <strong>Alertas</strong> para acompanhar riscos da carteira.
             </p>
           </div>
-
-          <div style={styles.stack}>
-            <Card>
-              <p style={styles.metricLine}>
-                <b>{followups.length}</b> cliente(s) com follow-up crítico na amostra.
-              </p>
-              <Link to="/alertas">Ver alertas</Link>
-            </Card>
-
-            <Card>
-              <p style={styles.metricLine}>
-                <b>{clientesSemAcao.length}</b> cliente(s) sem próxima ação definida.
-              </p>
-              <Link to="/clientes">Revisar clientes</Link>
-            </Card>
-
-            <Card>
-              <p style={styles.metricLine}>
-                <b>{clientesQuentes.length}</b> cliente(s) quentes em destaque.
-              </p>
-              <Link to="/clientes">Abrir carteira</Link>
-            </Card>
-          </div>
-        </div>
-
-        <div>
-          <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Resumo do momento</h2>
-            <p style={styles.sectionText}>
-              Uma leitura executiva do que está acontecendo agora.
-            </p>
-          </div>
-
-          <div style={styles.stack}>
-            <Card>
-              <p style={styles.metricLine}>
-                {vencidas > 0
-                  ? `Você tem ${vencidas} tarefa(s) vencida(s) e ${pendentes} pendente(s) no total.`
-                  : `Você tem ${pendentes} tarefa(s) pendente(s) e nenhuma vencida no momento.`}
-              </p>
-            </Card>
-
-            <Card>
-              <p style={styles.metricLine}>
-                {contatos > 0
-                  ? `${contatos} contato(s) já foram registrados hoje.`
-                  : "Ainda não há contatos registrados hoje."}
-              </p>
-            </Card>
-
-            <Card>
-              <p style={styles.metricLine}>
-                Use a tela <b>Hoje</b> para agir e a tela <b>Alertas</b> para acompanhar riscos.
-              </p>
-            </Card>
-          </div>
-        </div>
+        </Card>
       </section>
 
-      <section style={styles.section}>
+      <section>
         <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Riscos em destaque</h2>
-          <p style={styles.sectionText}>
-            Uma amostra rápida dos pontos que mais pedem revisão da carteira.
-          </p>
+          <div>
+            <h2 style={styles.sectionTitle}>Riscos em destaque</h2>
+            <p style={styles.sectionText}>
+              Uma amostra curta do que merece atenção para a carteira não
+              esfriar.
+            </p>
+          </div>
+          <Link to="/alertas" style={styles.inlineLink}>
+            Ver alertas
+          </Link>
         </div>
 
-        {followups.length === 0 ? (
+        <div style={styles.riskGrid}>
           <Card>
-            <p>Nenhum risco crítico apareceu na amostra atual.</p>
+            <h3 style={styles.cardTitle}>Sem contato há 15+ dias</h3>
+            {followups.length === 0 ? (
+              <p style={styles.emptyText}>Nenhum cliente crítico na amostra.</p>
+            ) : (
+              <div style={styles.stack}>
+                {followups.map((cliente) => (
+                  <Link
+                    key={cliente.cliente_id}
+                    to={`/clientes/${cliente.cliente_id}`}
+                    style={styles.itemLink}
+                  >
+                    <span>{cliente.nome}</span>
+                    <strong>{cliente.dias} dias</strong>
+                  </Link>
+                ))}
+              </div>
+            )}
           </Card>
-        ) : (
-          <div style={styles.stack}>
-            {followups.map((cliente) => (
-              <Card key={cliente.cliente_id}>
-                <b>{cliente.nome}</b>
-                <p style={styles.metricLine}>
-                  {cliente.dias} dias sem contato
-                </p>
-                <Link to={`/clientes/${cliente.cliente_id}`}>Abrir cliente</Link>
-              </Card>
-            ))}
-          </div>
-        )}
+
+          <Card>
+            <h3 style={styles.cardTitle}>Quentes sem próxima ação</h3>
+            {clientesQuentes.length === 0 ? (
+              <p style={styles.emptyText}>Nenhum cliente quente em destaque.</p>
+            ) : (
+              <div style={styles.stack}>
+                {clientesQuentes.map((cliente) => (
+                  <Link
+                    key={cliente.id}
+                    to={`/clientes/${cliente.id}`}
+                    style={styles.itemLink}
+                  >
+                    <span>{cliente.nome}</span>
+                    <strong>{cliente.proxima_acao || "Definir ação"}</strong>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          <Card>
+            <h3 style={styles.cardTitle}>Sem próxima ação definida</h3>
+            {clientesSemAcao.length === 0 ? (
+              <p style={styles.emptyText}>Tudo em dia nesta amostra.</p>
+            ) : (
+              <div style={styles.stack}>
+                {clientesSemAcao.map((cliente) => (
+                  <Link
+                    key={cliente.id}
+                    to={`/clientes/${cliente.id}`}
+                    style={styles.itemLink}
+                  >
+                    <span>{cliente.nome}</span>
+                    <strong>{cliente.empresa || "Carteira ativa"}</strong>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
       </section>
     </div>
   );
@@ -198,57 +221,64 @@ export default function Dashboard() {
 
 const styles = {
   page: {
-    width: "100%",
-    maxWidth: "1160px",
-    margin: "0 auto",
+    display: "flex",
+    flexDirection: "column",
+    gap: 24,
   },
   hero: {
-    marginBottom: 25,
     padding: "24px",
-    borderRadius: "18px",
+    borderRadius: "20px",
+    border: "1px solid rgba(37,99,235,0.16)",
     background:
-      "linear-gradient(135deg, rgba(37,99,235,0.10), rgba(14,165,233,0.08))",
-    border: "1px solid rgba(59,130,246,0.16)",
+      "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(14,165,233,0.07))",
     display: "flex",
     justifyContent: "space-between",
-    gap: 18,
-    alignItems: "flex-start",
+    alignItems: "flex-end",
+    gap: 16,
     flexWrap: "wrap",
   },
-  heroTitle: {
-    margin: "0 0 6px",
+  eyebrow: {
+    display: "inline-block",
+    padding: "4px 10px",
+    borderRadius: "999px",
+    background: "rgba(37,99,235,0.12)",
+    color: "#1d4ed8",
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    marginBottom: 10,
   },
-  heroText: {
+  title: {
+    margin: "0 0 8px",
+  },
+  subtitle: {
     margin: 0,
+    maxWidth: 760,
     color: "#475569",
-    maxWidth: 720,
     lineHeight: 1.6,
   },
-  heroLink: {
+  heroAction: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 132,
+    padding: "12px 16px",
+    borderRadius: 12,
+    background: "#2563eb",
+    color: "#fff",
     textDecoration: "none",
-    fontWeight: "bold",
-    padding: "10px 14px",
-    borderRadius: "10px",
-    background: "#dbeafe",
-    color: "#1d4ed8",
+    fontWeight: 700,
   },
   statsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-    gap: 20,
-    marginBottom: 36,
+    gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+    gap: 16,
   },
-  gridTwoColumns: {
+  sectionGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: 24,
-    marginBottom: 36,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionHeader: {
-    marginBottom: 16,
+    gap: 16,
   },
   sectionTitle: {
     margin: "0 0 8px",
@@ -258,13 +288,69 @@ const styles = {
     color: "#64748b",
     lineHeight: 1.6,
   },
+  metricList: {
+    display: "grid",
+    gap: 12,
+  },
+  metricRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    color: "#334155",
+  },
+  summaryBlock: {
+    display: "grid",
+    gap: 10,
+  },
+  summaryLine: {
+    margin: 0,
+    color: "#334155",
+    lineHeight: 1.6,
+  },
+  summaryHint: {
+    margin: 0,
+    color: "#64748b",
+    lineHeight: 1.6,
+  },
+  sectionHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    gap: 12,
+    flexWrap: "wrap",
+    marginBottom: 16,
+  },
+  inlineLink: {
+    fontWeight: 700,
+    textDecoration: "none",
+  },
+  riskGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: 16,
+  },
+  cardTitle: {
+    margin: "0 0 12px",
+  },
   stack: {
     display: "grid",
-    gap: 14,
+    gap: 10,
   },
-  metricLine: {
+  itemLink: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    alignItems: "center",
+    padding: "12px 14px",
+    borderRadius: 12,
+    background: "#f8fafc",
+    color: "#0f172a",
+    textDecoration: "none",
+    border: "1px solid #e2e8f0",
+  },
+  emptyText: {
     margin: 0,
-    color: "#475569",
+    color: "#64748b",
     lineHeight: 1.6,
   },
 };

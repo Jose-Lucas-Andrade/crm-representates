@@ -19,7 +19,6 @@ export async function listarClientes() {
 }
 
 export async function criarCliente(cliente) {
-  // Pega usuário logado
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -31,15 +30,14 @@ export async function criarCliente(cliente) {
 
   const { error } = await supabase.from("clientes").insert([
     {
-      user_id: user.id,   // 🔥 ESSENCIAL para passar na RLS
+      user_id: user.id,
       nome: cliente.nome,
       empresa: cliente.empresa,
       telefone: cliente.telefone,
       email: cliente.email,
       cidade: cliente.cidade,
       status: cliente.status || CLIENTE_STATUS.PROSPECT,
-      classificacao:
-        cliente.classificacao || CLIENTE_CLASSIFICACAO.MORNO,
+      classificacao: cliente.classificacao || CLIENTE_CLASSIFICACAO.MORNO,
       proxima_acao: cliente.proxima_acao || null,
       proxima_visita: cliente.proxima_visita || null,
     },
@@ -47,7 +45,7 @@ export async function criarCliente(cliente) {
 
   if (error) {
     console.error("Erro ao criar cliente:", error.message);
-    alert("Erro ao criar cliente: " + error.message);
+    alert(`Erro ao criar cliente: ${error.message}`);
     return false;
   }
 
@@ -57,18 +55,14 @@ export async function criarCliente(cliente) {
 export async function atualizarCliente(id, cliente) {
   const payload = {
     ...cliente,
-    classificacao:
-      cliente.classificacao || CLIENTE_CLASSIFICACAO.MORNO,
+    classificacao: cliente.classificacao || CLIENTE_CLASSIFICACAO.MORNO,
   };
 
-  const { error } = await supabase
-    .from("clientes")
-    .update(payload)
-    .eq("id", id);
+  const { error } = await supabase.from("clientes").update(payload).eq("id", id);
 
   if (error) {
     console.error("Erro ao atualizar cliente:", error.message);
-    alert("Erro ao atualizar: " + error.message);
+    alert(`Erro ao atualizar: ${error.message}`);
     return false;
   }
 
@@ -76,14 +70,11 @@ export async function atualizarCliente(id, cliente) {
 }
 
 export async function excluirCliente(id) {
-  const { error } = await supabase
-    .from("clientes")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("clientes").delete().eq("id", id);
 
   if (error) {
     console.error("Erro ao excluir cliente:", error.message);
-    alert("Erro ao excluir: " + error.message);
+    alert(`Erro ao excluir: ${error.message}`);
     return false;
   }
 
