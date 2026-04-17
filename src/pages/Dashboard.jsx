@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Card from "../components/ui/Card";
-import { CLIENTE_CLASSIFICACAO } from "../constants/clientes";
+import { CLIENTE_CLASSIFICACAO, CLIENTE_STATUS } from "../constants/clientes";
 import { listarClientes } from "../services/clientes";
 import {
   contatosHoje,
@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [vencidas, setVencidas] = useState(0);
   const [followups, setFollowups] = useState([]);
   const [clientesQuentes, setClientesQuentes] = useState([]);
+  const [clientesQuentesSemAcao, setClientesQuentesSemAcao] = useState([]);
   const [clientesSemAcao, setClientesSemAcao] = useState([]);
 
   useEffect(() => {
@@ -59,8 +60,22 @@ export default function Dashboard() {
           )
           .slice(0, 4)
       );
+      setClientesQuentesSemAcao(
+        clientes
+          .filter(
+            (cliente) =>
+              cliente.classificacao === CLIENTE_CLASSIFICACAO.QUENTE &&
+              !cliente.proxima_acao
+          )
+          .slice(0, 4)
+      );
       setClientesSemAcao(
-        clientes.filter((cliente) => !cliente.proxima_acao).slice(0, 4)
+        clientes
+          .filter(
+            (cliente) =>
+              cliente.status !== CLIENTE_STATUS.INATIVO && !cliente.proxima_acao
+          )
+          .slice(0, 4)
       );
     }
 
@@ -176,11 +191,11 @@ export default function Dashboard() {
 
           <Card>
             <h3 style={styles.cardTitle}>Quentes sem próxima ação</h3>
-            {clientesQuentes.length === 0 ? (
+            {clientesQuentesSemAcao.length === 0 ? (
               <p style={styles.emptyText}>Nenhum cliente quente em destaque.</p>
             ) : (
               <div style={styles.stack}>
-                {clientesQuentes.map((cliente) => (
+                {clientesQuentesSemAcao.map((cliente) => (
                   <Link
                     key={cliente.id}
                     to={`/clientes/${cliente.id}`}

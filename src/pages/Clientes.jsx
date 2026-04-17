@@ -59,8 +59,10 @@ export default function Clientes() {
 
   const clientesFiltrados = clientes.filter((cliente) => {
     const buscaNormalizada = busca.trim().toLowerCase();
-    const nomeEmpresa = `${cliente.nome || ""} ${cliente.empresa || ""}`.toLowerCase();
-    const atendeBusca = !buscaNormalizada || nomeEmpresa.includes(buscaNormalizada);
+    const nomeEmpresa =
+      `${cliente.nome || ""} ${cliente.empresa || ""}`.toLowerCase();
+    const atendeBusca =
+      !buscaNormalizada || nomeEmpresa.includes(buscaNormalizada);
     const atendeStatus = !filtroStatus || cliente.status === filtroStatus;
 
     return atendeBusca && atendeStatus;
@@ -151,7 +153,10 @@ export default function Clientes() {
                 >
                   Editar
                 </Link>
-                <Button variant="danger" onClick={() => handleExcluir(cliente.id)}>
+                <Button
+                  variant="danger"
+                  onClick={() => handleExcluir(cliente.id)}
+                >
                   Excluir
                 </Button>
               </div>

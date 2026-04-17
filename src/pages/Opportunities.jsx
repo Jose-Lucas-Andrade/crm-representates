@@ -4,7 +4,10 @@ import {
   CLIENTE_STATUS,
   CLIENTE_STATUS_OPTIONS,
 } from "../constants/clientes";
-import { listarClientesPorStatus, atualizarStatus } from "../services/oportunidades";
+import {
+  listarClientesPorStatus,
+  atualizarStatus,
+} from "../services/oportunidades";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900);
@@ -48,9 +51,15 @@ export default function Opportunities() {
     setClientes(data || []);
   }
 
-  const prospect = clientes.filter((cliente) => cliente.status === CLIENTE_STATUS.PROSPECT);
-  const negociacao = clientes.filter((cliente) => cliente.status === CLIENTE_STATUS.NEGOCIACAO);
-  const clientesAtivos = clientes.filter((cliente) => cliente.status === CLIENTE_STATUS.CLIENTE);
+  const prospect = clientes.filter(
+    (cliente) => cliente.status === CLIENTE_STATUS.PROSPECT
+  );
+  const negociacao = clientes.filter(
+    (cliente) => cliente.status === CLIENTE_STATUS.NEGOCIACAO
+  );
+  const clientesAtivos = clientes.filter(
+    (cliente) => cliente.status === CLIENTE_STATUS.CLIENTE
+  );
 
   function handleDragEnd(event) {
     if (isMobile) {
@@ -71,14 +80,15 @@ export default function Opportunities() {
       <section style={styles.hero}>
         <h1 style={styles.title}>Oportunidades</h1>
         <p style={styles.subtitle}>
-          Acompanhe o pipeline comercial com clareza e ajuste o status dos clientes
-          sem sair da carteira.
+          Acompanhe o pipeline comercial com clareza e ajuste o status dos
+          clientes sem sair da carteira.
         </p>
       </section>
 
       {isMobile ? (
         <div style={styles.mobileHint}>
-          No celular, o pipeline fica empilhado para facilitar leitura e mudança de status.
+          No celular, o pipeline fica empilhado para facilitar leitura e
+          mudança de status.
         </div>
       ) : (
         <div style={styles.mobileHint}>
@@ -87,8 +97,8 @@ export default function Opportunities() {
       )}
 
       <div style={styles.infoBox}>
-        Clientes com status <b>Inativo</b> saem deste quadro e continuam visíveis na
-        carteira de clientes.
+        Clientes com status <b>Inativo</b> saem deste quadro e continuam
+        visíveis na carteira de clientes.
       </div>
 
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -142,7 +152,9 @@ function Coluna({ id, titulo, clientes, onMover }) {
               <span style={styles.statusPill}>{titulo}</span>
             </div>
 
-            <p style={styles.companyLine}>{cliente.empresa || "Empresa não informada"}</p>
+            <p style={styles.companyLine}>
+              {cliente.empresa || "Empresa não informada"}
+            </p>
 
             <select
               value={cliente.status}

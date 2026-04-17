@@ -47,32 +47,57 @@ export default function Tarefas() {
     setTarefas(data || []);
   }
 
-  const tarefasHoje = tarefas.filter((tarefa) => diferencaEmDias(tarefa.data) === 0);
-  const tarefasVencidas = tarefas.filter((tarefa) => diferencaEmDias(tarefa.data) < 0);
-  const tarefasFuturas = tarefas.filter((tarefa) => diferencaEmDias(tarefa.data) > 0);
+  const tarefasHoje = tarefas.filter(
+    (tarefa) => diferencaEmDias(tarefa.data) === 0
+  );
+  const tarefasVencidas = tarefas.filter(
+    (tarefa) => diferencaEmDias(tarefa.data) < 0
+  );
+  const tarefasFuturas = tarefas.filter(
+    (tarefa) => diferencaEmDias(tarefa.data) > 0
+  );
 
   return (
     <div>
       <section style={styles.hero}>
         <h1 style={styles.title}>Tarefas</h1>
         <p style={styles.subtitle}>
-          Acompanhe tudo o que está pendente, sem limitar a visão apenas ao dia de hoje.
+          Acompanhe tudo o que está pendente, sem limitar a visão apenas ao dia
+          de hoje.
         </p>
       </section>
 
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>Vencidas</h2>
-        <ListaTarefas tarefas={tarefasVencidas} onConcluir={concluir} destaque="Vencida" cor="#b91c1c" fundo="#fee2e2" />
+        <ListaTarefas
+          tarefas={tarefasVencidas}
+          onConcluir={concluir}
+          destaque="Vencida"
+          cor="#b91c1c"
+          fundo="#fee2e2"
+        />
       </section>
 
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>Hoje</h2>
-        <ListaTarefas tarefas={tarefasHoje} onConcluir={concluir} destaque="Hoje" cor="#0f766e" fundo="#ccfbf1" />
+        <ListaTarefas
+          tarefas={tarefasHoje}
+          onConcluir={concluir}
+          destaque="Hoje"
+          cor="#0f766e"
+          fundo="#ccfbf1"
+        />
       </section>
 
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>Próximas</h2>
-        <ListaTarefas tarefas={tarefasFuturas} onConcluir={concluir} destaque="Agendada" cor="#1d4ed8" fundo="#dbeafe" />
+        <ListaTarefas
+          tarefas={tarefasFuturas}
+          onConcluir={concluir}
+          destaque="Agendada"
+          cor="#1d4ed8"
+          fundo="#dbeafe"
+        />
       </section>
     </div>
   );

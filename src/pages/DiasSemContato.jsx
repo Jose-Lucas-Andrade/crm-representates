@@ -66,7 +66,8 @@ export default function DiasSemContato() {
         listaClientes
           .filter(
             (cliente) =>
-              cliente.proxima_visita && diferencaEmDias(cliente.proxima_visita) < 0
+              cliente.proxima_visita &&
+              diferencaEmDias(cliente.proxima_visita) < 0
           )
           .sort((a, b) => a.proxima_visita.localeCompare(b.proxima_visita))
           .slice(0, 8)
@@ -146,7 +147,8 @@ export default function DiasSemContato() {
         <div>
           <h2 style={styles.sectionTitle}>Clientes quentes sem próxima ação</h2>
           <p style={styles.sectionText}>
-            Oportunidades boas que ainda estão sem direcionamento comercial claro.
+            Oportunidades boas que ainda estão sem direcionamento comercial
+            claro.
           </p>
 
           {quentesSemAcao.length === 0 ? (
@@ -189,7 +191,8 @@ export default function DiasSemContato() {
                 <Card key={cliente.id}>
                   <b>{cliente.nome}</b>
                   <p style={styles.metaLine}>
-                    Próxima visita registrada: <b>{formatarData(cliente.proxima_visita)}</b>
+                    Próxima visita registrada:{" "}
+                    <b>{formatarData(cliente.proxima_visita)}</b>
                   </p>
                   <button
                     style={styles.button}

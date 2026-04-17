@@ -73,7 +73,10 @@ export default function Hoje() {
             ...cliente,
             diasParaAcao: diferencaEmDias(cliente.proxima_visita),
           }))
-          .filter((cliente) => cliente.diasParaAcao >= 1 && cliente.diasParaAcao <= 5)
+          .filter(
+            (cliente) =>
+              cliente.diasParaAcao >= 1 && cliente.diasParaAcao <= 5
+          )
           .sort((a, b) => a.diasParaAcao - b.diasParaAcao)
           .slice(0, 6)
       );
