@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Organizar a evolucao do CRM em fases realistas, priorizando valor comercial, confiabilidade e operacao simples.
+Organizar a evolucao do CRM em fases realistas, priorizando valor comercial, confiabilidade, implantacao simples e operacao objetiva.
 
 ## Fase 1 - Base estavel
 
@@ -22,7 +22,7 @@ Status: concluida
 
 ## Fase 2 - Refinamento operacional
 
-Status: proxima
+Status: em consolidacao
 
 - melhorar mensagens de erro e sucesso
 - adicionar estados de loading mais claros
@@ -31,7 +31,18 @@ Status: proxima
 - melhorar visual dos cards e indicadores
 - revisar fluxo de bloqueio e renovacao
 
-## Fase 3 - Inteligencia comercial
+## Fase 3 - Implantacao e ativacao
+
+Status: proxima prioridade oficial
+
+- importacao de clientes por CSV
+- modelo de planilha para download
+- validacao previa antes de importar
+- importacao parcial com linhas validas
+- alerta de possiveis duplicados
+- relatorio final de importacao
+
+## Fase 4 - Inteligencia comercial
 
 - filtros avancados de clientes
 - relatorios por status
@@ -40,7 +51,7 @@ Status: proxima
 - historico mais rico por cliente
 - visao de produtividade por representante
 
-## Fase 4 - Pos-venda e relacionamento
+## Fase 5 - Pos-venda e relacionamento
 
 - campos de pos-venda
 - agenda de retorno
@@ -49,7 +60,7 @@ Status: proxima
 - lembretes de recompra
 - follow-up segmentado por tipo de cliente
 
-## Fase 5 - Financeiro e planos
+## Fase 6 - Financeiro e planos
 
 - painel administrativo
 - controle de assinatura
@@ -57,7 +68,7 @@ Status: proxima
 - expiracao automatica de acesso
 - liberacao automatica apos pagamento
 
-## Fase 6 - Escalabilidade
+## Fase 7 - Escalabilidade
 
 - auditoria de alteracoes
 - logs estruturados
@@ -84,8 +95,18 @@ Status: proxima
 
 ## Prioridade recomendada
 
-1. refinamento operacional
+1. implantacao e ativacao
 2. inteligencia comercial
 3. pos-venda
 4. financeiro e planos
 5. escalabilidade
+
+## Observacao estrategica
+
+A importacao de clientes passa a ser a proxima prioridade oficial por atacar diretamente:
+
+- barreira de entrada
+- ativacao do usuario
+- carteira robusta
+- reducao de cadastro manual
+- aumento de valor percebido logo no inicio

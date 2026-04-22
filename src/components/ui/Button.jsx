@@ -3,9 +3,15 @@ export default function Button({
   onClick,
   type = "button",
   variant = "primary",
+  ...props
 }) {
   return (
-    <button type={type} onClick={onClick} className={`btn ${variant}`}>
+    <button
+      type={type}
+      onClick={onClick}
+      className={`btn ${variant}`}
+      {...props}
+    >
       {children}
     </button>
   );

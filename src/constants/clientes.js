@@ -13,7 +13,7 @@ export const CLIENTE_CLASSIFICACAO = {
 
 export const CLIENTE_STATUS_OPTIONS = [
   { value: CLIENTE_STATUS.PROSPECT, label: "Prospect" },
-  { value: CLIENTE_STATUS.NEGOCIACAO, label: "Negociação" },
+  { value: CLIENTE_STATUS.NEGOCIACAO, label: "Negociacao" },
   { value: CLIENTE_STATUS.CLIENTE, label: "Cliente" },
   { value: CLIENTE_STATUS.INATIVO, label: "Inativo" },
 ];

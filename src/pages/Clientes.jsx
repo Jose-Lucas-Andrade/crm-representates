@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import ImportarClientesModal from "../components/clientes/ImportarClientesModal";
 import {
   CLIENTE_STATUS_OPTIONS,
   getClienteClassificacaoLabel,
@@ -11,7 +12,7 @@ import { excluirCliente, listarClientes } from "../services/clientes";
 
 function formatarData(data) {
   if (!data) {
-    return "Não definida";
+    return "Nao definida";
   }
 
   return new Date(`${data}T00:00:00`).toLocaleDateString("pt-BR");
@@ -21,6 +22,12 @@ export default function Clientes() {
   const [clientes, setClientes] = useState([]);
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("");
+  const [modalImportacaoAberto, setModalImportacaoAberto] = useState(false);
+
+  async function carregarClientes() {
+    const data = await listarClientes();
+    setClientes(data || []);
+  }
 
   useEffect(() => {
     let ativo = true;
@@ -74,8 +81,8 @@ export default function Clientes() {
         <div>
           <h1 style={styles.title}>Clientes</h1>
           <p style={styles.subtitle}>
-            Acompanhe a carteira, encontre rápido quem precisa de atenção e
-            mantenha o próximo passo sempre visível.
+            Acompanhe a carteira, encontre rapido quem precisa de atencao e
+            mantenha o proximo passo sempre visivel.
           </p>
         </div>
       </section>
@@ -105,6 +112,13 @@ export default function Clientes() {
         <Link to="/clientes/novo" style={styles.newClientLink}>
           <Button>Novo cliente</Button>
         </Link>
+
+        <Button
+          variant="secondary"
+          onClick={() => setModalImportacaoAberto(true)}
+        >
+          Importar clientes
+        </Button>
       </section>
 
       <section style={styles.list}>
@@ -119,7 +133,7 @@ export default function Clientes() {
                 <div>
                   <h3 style={styles.cardTitle}>{cliente.nome}</h3>
                   <p style={styles.companyLine}>
-                    {cliente.empresa || "Empresa não informada"}
+                    {cliente.empresa || "Empresa nao informada"}
                   </p>
                 </div>
                 <span style={styles.statusBadge}>
@@ -129,17 +143,17 @@ export default function Clientes() {
 
               <div style={styles.metaGrid}>
                 <p style={styles.metaLine}>
-                  Classificação:{" "}
+                  Classificacao:{" "}
                   <b>{getClienteClassificacaoLabel(cliente.classificacao)}</b>
                 </p>
                 <p style={styles.metaLine}>
-                  Próxima ação: <b>{cliente.proxima_acao || "Não definida"}</b>
+                  Proxima acao: <b>{cliente.proxima_acao || "Nao definida"}</b>
                 </p>
                 <p style={styles.metaLine}>
-                  Próxima visita: <b>{formatarData(cliente.proxima_visita)}</b>
+                  Proxima visita: <b>{formatarData(cliente.proxima_visita)}</b>
                 </p>
                 <p style={styles.metaLine}>
-                  Cidade: <b>{cliente.cidade || "Não informada"}</b>
+                  Cidade: <b>{cliente.cidade || "Nao informada"}</b>
                 </p>
               </div>
 
@@ -164,6 +178,13 @@ export default function Clientes() {
           ))
         )}
       </section>
+
+      <ImportarClientesModal
+        aberto={modalImportacaoAberto}
+        onFechar={() => setModalImportacaoAberto(false)}
+        clientesExistentes={clientes}
+        onImportado={carregarClientes}
+      />
     </div>
   );
 }
@@ -192,7 +213,8 @@ const styles = {
   },
   filters: {
     display: "grid",
-    gridTemplateColumns: "minmax(220px, 1.4fr) minmax(180px, 0.7fr) auto",
+    gridTemplateColumns:
+      "minmax(220px, 1.4fr) minmax(180px, 0.7fr) auto auto",
     gap: 12,
     alignItems: "center",
   },
