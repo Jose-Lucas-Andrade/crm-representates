@@ -5,7 +5,7 @@ import { supabase } from "../supabaseClient";
 
 function isProfileExpirado(profile) {
   if (!profile) {
-    return false;
+    return true;
   }
 
   const agora = new Date();
@@ -18,10 +18,7 @@ function isProfileExpirado(profile) {
   }
 
   if (profile.plano === "trial" || profile.plano === "basic") {
-    return (
-      Boolean(profile.trial_fim) &&
-      new Date(profile.trial_fim) < agora
-    );
+    return Boolean(profile.trial_fim) && new Date(profile.trial_fim) < agora;
   }
 
   return false;
@@ -29,21 +26,19 @@ function isProfileExpirado(profile) {
 
 export default function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
-  const [bloqueado, setBloqueado] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const [resultadoAcesso, setResultadoAcesso] = useState({
+    userId: null,
+    status: "checking",
+  });
 
   useEffect(() => {
     if (!user) {
-      setBloqueado(false);
-      setChecking(false);
       return;
     }
 
     let mounted = true;
 
     async function verificarAcesso() {
-      setChecking(true);
-
       try {
         const { data: profile, error } = await supabase
           .from("profiles")
@@ -54,22 +49,28 @@ export default function PrivateRoute({ children }) {
         if (error) {
           console.error("Erro ao buscar profile:", error);
           if (mounted) {
-            setBloqueado(false);
+            setResultadoAcesso({ userId: user.id, status: "blocked" });
+          }
+          return;
+        }
+
+        if (!profile) {
+          if (mounted) {
+            setResultadoAcesso({ userId: user.id, status: "blocked" });
           }
           return;
         }
 
         if (mounted) {
-          setBloqueado(isProfileExpirado(profile));
+          setResultadoAcesso({
+            userId: user.id,
+            status: isProfileExpirado(profile) ? "blocked" : "allowed",
+          });
         }
       } catch (error) {
         console.error("Erro inesperado ao validar acesso:", error);
         if (mounted) {
-          setBloqueado(false);
-        }
-      } finally {
-        if (mounted) {
-          setChecking(false);
+          setResultadoAcesso({ userId: user.id, status: "blocked" });
         }
       }
     }
@@ -81,16 +82,20 @@ export default function PrivateRoute({ children }) {
     };
   }, [user]);
 
+  const checking =
+    Boolean(user) &&
+    (resultadoAcesso.userId !== user.id || resultadoAcesso.status === "checking");
+
   if (loading || checking) {
     return <div>Carregando...</div>;
   }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
-  if (bloqueado) {
-    return <Navigate to="/bloqueado" />;
+  if (resultadoAcesso.status === "blocked") {
+    return <Navigate to="/bloqueado" replace />;
   }
 
   return children;

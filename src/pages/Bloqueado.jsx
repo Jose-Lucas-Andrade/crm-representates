@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
-const PLANO_MENSAL = "29,90";
+const PLANO_MENSAL = "39,90";
 const PIX_CHAVE = "61.273.860/0001-93";
 const WHATSAPP_LINK =
   "https://wa.me/5521983631683?text=Ola,%20acabei%20de%20fazer%20o%20pagamento%20do%20CRM%20e%20quero%20liberar%20meu%20acesso";
@@ -23,7 +23,15 @@ export default function Bloqueado() {
     let ativo = true;
 
     async function buscarPerfil() {
-      const { data } = await supabase.from("profiles").select("*").single();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("plano, trial_fim, proxima_cobranca")
+        .maybeSingle();
+
+      if (error) {
+        console.error("Erro ao buscar profile bloqueado:", error);
+        return;
+      }
 
       if (ativo && data) {
         setProfile(data);
@@ -57,23 +65,23 @@ export default function Bloqueado() {
     <div style={styles.container}>
       <div style={styles.card}>
         <div style={styles.badge}>Acesso pausado</div>
-        <h1 style={styles.title}>Sua conta precisa de regularização</h1>
+        <h1 style={styles.title}>Sua conta precisa de regularizacao</h1>
 
         <p style={styles.subtitle}>
           {dataVencimento
-            ? `Seu período atual venceu em ${formatarData(dataVencimento)}.`
-            : "Não encontramos uma data de renovação ativa para esta conta."}
+            ? `Seu periodo atual venceu em ${formatarData(dataVencimento)}.`
+            : "Nao encontramos uma data de renovacao ativa para esta conta."}
         </p>
 
         <div style={styles.alert}>
           Seus dados continuam seguros. Assim que o plano for regularizado, o
-          acesso volta normalmente e você retoma sua carteira sem perder nada.
+          acesso volta normalmente e voce retoma sua carteira sem perder nada.
         </div>
 
         <div style={styles.planBox}>
           <div>
-            <p style={styles.planLabel}>Plano atual para reativação</p>
-            <p style={styles.planValue}>R$ {PLANO_MENSAL} / mês</p>
+            <p style={styles.planLabel}>Plano atual para reativacao</p>
+            <p style={styles.planValue}>R$ {PLANO_MENSAL} / mes</p>
           </div>
           <p style={styles.planText}>
             Ideal para representantes que precisam acompanhar clientes,
@@ -84,7 +92,7 @@ export default function Bloqueado() {
         <div style={styles.pixBox}>
           <p style={styles.pixTitle}>Pagamento via PIX</p>
           <p style={styles.pixText}>
-            Faça o pagamento e envie o comprovante para liberar sua conta com
+            Faca o pagamento e envie o comprovante para liberar sua conta com
             mais rapidez.
           </p>
 
@@ -99,7 +107,7 @@ export default function Bloqueado() {
         <div style={styles.steps}>
           <div style={styles.stepItem}>
             <strong>1.</strong>
-            <span>Faça o pagamento do plano.</span>
+            <span>Faca o pagamento do plano.</span>
           </div>
           <div style={styles.stepItem}>
             <strong>2.</strong>
@@ -107,7 +115,7 @@ export default function Bloqueado() {
           </div>
           <div style={styles.stepItem}>
             <strong>3.</strong>
-            <span>Seu acesso será liberado e a carteira volta normalmente.</span>
+            <span>Seu acesso sera liberado e a carteira volta normalmente.</span>
           </div>
         </div>
 
