@@ -4,6 +4,10 @@ import {
   gerarModeloImportacaoCsv,
   processarImportacaoClientes,
 } from "../../utils/importacaoClientes";
+import {
+  gerarModeloImportacaoXlsx,
+  processarImportacaoClientesXlsx,
+} from "../../utils/importacaoClientesExcel";
 import { importarClientesEmLote } from "../../services/clientes";
 
 export default function ImportarClientesModal({
@@ -41,8 +45,10 @@ export default function ImportarClientesModal({
   }
 
   async function handleValidar() {
-    if (!arquivo) {
-      setMensagem("Selecione um arquivo CSV antes de validar.");
+    const tipoArquivo = identificarTipoArquivo(arquivo);
+
+    if (!arquivo || !tipoArquivo) {
+      setMensagem("Selecione um arquivo CSV ou Excel (.xlsx) antes de validar.");
       return;
     }
 
@@ -50,11 +56,17 @@ export default function ImportarClientesModal({
     setMensagem("");
 
     try {
-      const texto = await arquivo.text();
-      const processado = processarImportacaoClientes(
-        texto,
-        clientesExistentes || []
-      );
+      const processado =
+        tipoArquivo === "xlsx"
+          ? await processarImportacaoClientesXlsx(
+              arquivo,
+              clientesExistentes || []
+            )
+          : processarImportacaoClientes(
+              await arquivo.text(),
+              clientesExistentes || []
+            );
+
       setResultado(processado);
 
       if (processado.erroFatal) {
@@ -62,7 +74,9 @@ export default function ImportarClientesModal({
         return;
       }
 
-      setMensagem("Arquivo validado com sucesso.");
+      setMensagem(
+        `Arquivo ${tipoArquivo === "xlsx" ? "Excel" : "CSV"} validado com sucesso.`
+      );
     } catch (error) {
       setMensagem(`Nao foi possivel ler o arquivo: ${error.message}`);
     } finally {
@@ -108,7 +122,7 @@ export default function ImportarClientesModal({
     setLoadingImportacao(false);
   }
 
-  function handleBaixarModelo() {
+  function handleBaixarModeloCsv() {
     const conteudo = gerarModeloImportacaoCsv();
     const blob = new Blob([conteudo], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -119,6 +133,25 @@ export default function ImportarClientesModal({
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  }
+
+  async function handleBaixarModeloXlsx() {
+    try {
+      const conteudo = await gerarModeloImportacaoXlsx();
+      const blob = new Blob([conteudo], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "modelo-importacao-clientes.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setMensagem(`Nao foi possivel gerar o modelo Excel: ${error.message}`);
+    }
   }
 
   function resetarEstado() {
@@ -142,8 +175,8 @@ export default function ImportarClientesModal({
           <div>
             <h2 style={styles.title}>Importar clientes por planilha</h2>
             <p style={styles.subtitle}>
-              Envie um arquivo CSV no modelo padrao para adicionar varios
-              clientes de uma vez.
+              Envie um arquivo CSV ou Excel (.xlsx) no modelo padrao para
+              adicionar varios clientes de uma vez.
             </p>
           </div>
           <button style={styles.closeButton} onClick={fecharModal}>
@@ -155,35 +188,48 @@ export default function ImportarClientesModal({
           <div style={styles.section}>
             <div style={styles.sectionHeader}>
               <h3 style={styles.sectionTitle}>Modelo e regras rapidas</h3>
-              <Button onClick={handleBaixarModelo}>Baixar modelo</Button>
+              <div style={styles.actionsRow}>
+                <Button onClick={handleBaixarModeloXlsx}>
+                  Baixar modelo Excel
+                </Button>
+                <Button variant="secondary" onClick={handleBaixarModeloCsv}>
+                  Baixar modelo CSV
+                </Button>
+              </div>
             </div>
             <ul style={styles.rulesList}>
               <li>Use o modelo padrao para evitar erros de coluna.</li>
               <li>O campo nome e obrigatorio.</li>
               <li>Status aceitos: PROSPECT, NEGOCIACAO, CLIENTE, INATIVO.</li>
               <li>Classificacoes aceitas: QUENTE, MORNO, FRIO.</li>
+              <li>Arquivos aceitos: CSV e Excel (.xlsx).</li>
               <li>Linhas com erro nao serao importadas.</li>
             </ul>
           </div>
 
           <div style={styles.section}>
-            <h3 style={styles.sectionTitle}>Arquivo CSV</h3>
+            <h3 style={styles.sectionTitle}>Arquivo da carteira</h3>
             <div style={styles.uploadBox}>
               <input
                 ref={inputRef}
                 type="file"
-                accept=".csv"
+                accept=".csv,.xlsx"
                 onChange={(event) => {
                   const novoArquivo = event.target.files?.[0] || null;
+
                   setArquivo(novoArquivo);
                   setResultado(null);
-                  setMensagem("");
+                  setMensagem(
+                    novoArquivo && !identificarTipoArquivo(novoArquivo)
+                      ? "Formato nao suportado. Envie um arquivo CSV ou Excel (.xlsx)."
+                      : ""
+                  );
                 }}
               />
               <p style={styles.fileInfo}>
                 {arquivo
                   ? `Arquivo selecionado: ${arquivo.name}`
-                  : "Selecione um arquivo CSV para validar."}
+                  : "Selecione um arquivo CSV ou Excel (.xlsx) para validar."}
               </p>
               <div style={styles.actionsRow}>
                 <Button onClick={handleValidar} disabled={loadingValidacao}>
@@ -270,6 +316,20 @@ function ResumoCard({ label, value }) {
       <strong style={styles.summaryValue}>{value}</strong>
     </div>
   );
+}
+
+function identificarTipoArquivo(arquivo) {
+  const nome = arquivo?.name?.toLowerCase() || "";
+
+  if (nome.endsWith(".csv")) {
+    return "csv";
+  }
+
+  if (nome.endsWith(".xlsx")) {
+    return "xlsx";
+  }
+
+  return null;
 }
 
 const styles = {

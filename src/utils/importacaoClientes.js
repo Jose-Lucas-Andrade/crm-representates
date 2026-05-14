@@ -3,7 +3,7 @@ import {
   CLIENTE_STATUS,
 } from "../constants/clientes";
 
-const COLUNAS_ACEITAS = [
+export const COLUNAS_ACEITAS = [
   "nome",
   "empresa",
   "telefone",
@@ -17,30 +17,45 @@ const COLUNAS_ACEITAS = [
 
 const STATUS_VALIDOS = new Set(Object.values(CLIENTE_STATUS));
 const CLASSIFICACOES_VALIDAS = new Set(Object.values(CLIENTE_CLASSIFICACAO));
+const EXEMPLO_IMPORTACAO_CLIENTES = [
+  "Joao da Silva",
+  "Mercado Central",
+  "11999999999",
+  "joao@email.com",
+  "Sao Paulo",
+  "PROSPECT",
+  "MORNO",
+  "Ligar para apresentar mix",
+  "2026-05-10",
+];
 
 export function gerarModeloImportacaoCsv() {
   const cabecalho = COLUNAS_ACEITAS.join(",");
-  const exemplo = [
-    "Joao da Silva",
-    "Mercado Central",
-    "11999999999",
-    "joao@email.com",
-    "Sao Paulo",
-    "PROSPECT",
-    "MORNO",
-    "Ligar para apresentar mix",
-    "2026-05-10",
-  ]
+  const exemplo = EXEMPLO_IMPORTACAO_CLIENTES
     .map(escaparCampoCsv)
     .join(",");
 
   return `${cabecalho}\n${exemplo}\n`;
 }
 
+export function obterLinhasModeloImportacaoClientes() {
+  return [COLUNAS_ACEITAS, EXEMPLO_IMPORTACAO_CLIENTES].map((linha) => [
+    ...linha,
+  ]);
+}
+
 export function processarImportacaoClientes(textoCsv, clientesExistentes = []) {
   const linhas = parseCsvClientes(textoCsv);
+  return processarImportacaoClientesLinhas(linhas, clientesExistentes);
+}
 
-  if (linhas.length === 0) {
+export function processarImportacaoClientesLinhas(
+  linhas,
+  clientesExistentes = []
+) {
+  const linhasNormalizadas = Array.isArray(linhas) ? linhas : [];
+
+  if (linhasNormalizadas.length === 0) {
     return {
       total: 0,
       validas: [],
@@ -50,14 +65,16 @@ export function processarImportacaoClientes(textoCsv, clientesExistentes = []) {
     };
   }
 
-  const cabecalho = linhas[0].map((coluna) => normalizarCabecalho(coluna));
+  const cabecalho = linhasNormalizadas[0].map((coluna) =>
+    normalizarCabecalho(coluna)
+  );
   const colunasDesconhecidas = cabecalho.filter(
     (coluna) => coluna && !COLUNAS_ACEITAS.includes(coluna)
   );
 
   if (!cabecalho.includes("nome")) {
     return {
-      total: Math.max(linhas.length - 1, 0),
+      total: Math.max(linhasNormalizadas.length - 1, 0),
       validas: [],
       invalidas: [],
       duplicadas: [],
@@ -67,7 +84,7 @@ export function processarImportacaoClientes(textoCsv, clientesExistentes = []) {
 
   if (colunasDesconhecidas.length > 0) {
     return {
-      total: Math.max(linhas.length - 1, 0),
+      total: Math.max(linhasNormalizadas.length - 1, 0),
       validas: [],
       invalidas: [],
       duplicadas: [],
@@ -78,8 +95,8 @@ export function processarImportacaoClientes(textoCsv, clientesExistentes = []) {
   const validas = [];
   const invalidas = [];
 
-  for (let index = 1; index < linhas.length; index += 1) {
-    const valores = linhas[index];
+  for (let index = 1; index < linhasNormalizadas.length; index += 1) {
+    const valores = linhasNormalizadas[index];
     const linhaNumero = index + 1;
 
     if (valores.every((valor) => !String(valor || "").trim())) {
@@ -108,7 +125,7 @@ export function processarImportacaoClientes(textoCsv, clientesExistentes = []) {
   const duplicadas = detectarDuplicidadeClientes(validas, clientesExistentes);
 
   return {
-    total: Math.max(linhas.length - 1, 0),
+    total: Math.max(linhasNormalizadas.length - 1, 0),
     validas,
     invalidas,
     duplicadas,

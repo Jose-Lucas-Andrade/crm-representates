@@ -36,6 +36,7 @@ Status: em consolidacao
 Status: proxima prioridade oficial
 
 - importacao de clientes por CSV
+- evolucao da importacao para Excel (.xlsx)
 - modelo de planilha para download
 - validacao previa antes de importar
 - importacao parcial com linhas validas
